@@ -1,1 +1,38 @@
-<h1>{{ title }}</h1>
+<app-nav></app-nav>
+
+<div class="container mt-5 pt-5">
+  <h1 class="text-center mb-4">{{ title }}</h1>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div *ngIf="Users && Users.length > 0; else loading" class="card">
+        <div class="card-header bg-primary text-white">
+          <h2 class="mb-0">Users List</h2>
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            <li
+              *ngFor="let user of Users"
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>
+                <i class="fa fa-user me-2"></i>
+                {{ user.userName }}
+              </span>
+              <span class="badge bg-secondary">ID: {{ user.id }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="container text-center mt-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading users...</p>
+  </div>
+</ng-template>
