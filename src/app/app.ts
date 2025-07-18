@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { User } from './user';
@@ -8,12 +7,13 @@ import { Nav } from '../nav/nav';
 
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, Nav],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrls: ['./app.css'],
   standalone: true,
+  imports: [CommonModule, Nav],
 })
 export class App implements OnInit {
+  public loggedIn = false;
   protected title = 'chatting app';
   protected Users: User[] = [];
   protected usersUrlHttp = 'http://localhost:5194/Users/GetUsers';
@@ -36,5 +36,9 @@ export class App implements OnInit {
         console.error('Error fetching users from the backend', error);
       },
     });
+  }
+
+  onLoggedInChange(loggedIn: boolean) {
+    this.loggedIn = loggedIn;
   }
 }

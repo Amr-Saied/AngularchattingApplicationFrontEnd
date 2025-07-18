@@ -14,40 +14,70 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
-        <li class="nav-item">
+        <li class="nav-item" *ngIf="loggedIn; else empty1">
           <a class="nav-link" href="#">Profiles</a>
         </li>
-        <li class="nav-item">
+        <ng-template #empty1>
+          <li class="nav-item invisible"><a class="nav-link">Profiles</a></li>
+        </ng-template>
+        <li class="nav-item" *ngIf="loggedIn; else empty2">
           <a class="nav-link" href="#">Lists</a>
         </li>
-        <li class="nav-item">
+        <ng-template #empty2>
+          <li class="nav-item invisible"><a class="nav-link">Lists</a></li>
+        </ng-template>
+        <li class="nav-item" *ngIf="loggedIn; else empty3">
           <a class="nav-link" href="#">Messages</a>
         </li>
+        <ng-template #empty3>
+          <li class="nav-item invisible"><a class="nav-link">Messages</a></li>
+        </ng-template>
       </ul>
+
       <form
         #loginForm="ngForm"
         class="d-flex"
         role="Login"
         (ngSubmit)="login()"
+        *ngIf="!loggedIn"
       >
         <input
           class="form-control me-2"
           type="text"
           placeholder="Username"
           aria-label="Username"
-          [(ngModel)]="model.userName"
-          name="userName"
+          [(ngModel)]="model.Username"
+          name="Username"
         />
         <input
           class="form-control me-2"
           type="password"
           placeholder="Password"
           aria-label="Password"
-          [(ngModel)]="model.password"
-          name="password"
+          [(ngModel)]="model.Password"
+          name="Password"
         />
         <button class="btn btn-outline-success" type="submit">Login</button>
       </form>
+
+      <div class="dropdown ms-3" *ngIf="loggedIn">
+        <button
+          class="btn btn-secondary dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          Welcome {{ model.Username }}
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <li><a class="dropdown-item" href="#">Profile</a></li>
+          <li>
+            <a class="dropdown-item" href="#" (click)="logout()">Logout</a>
+          </li>
+          <li><a class="dropdown-item" href="#">Settings</a></li>
+        </ul>
+      </div>
     </div>
   </div>
 </nav>

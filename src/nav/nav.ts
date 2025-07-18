@@ -1,19 +1,39 @@
-import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
+// nav.ts
+import { Component, Output, EventEmitter } from '@angular/core';
+import { Account } from '../_services/account';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-nav',
-  imports: [FormsModule],
+  standalone: true,
   templateUrl: './nav.html',
-  styleUrl: './nav.css',
+  styleUrls: ['./nav.css'],
+  imports: [CommonModule, FormsModule],
 })
 export class Nav {
   model: any = {};
+  loggedIn = false;
 
-  constructor(private http: HttpClient) {}
+  @Output() loggedInChange = new EventEmitter<boolean>();
+
+  constructor(private account: Account) {}
 
   login() {
-    console.log(this.model);
+    this.account.login(this.model).subscribe({
+      next: (response) => {
+        console.log(response);
+        this.loggedIn = true;
+        this.loggedInChange.emit(true); // Notify parent
+      },
+      error: (error) => {
+        console.log(error);
+      },
+    });
+  }
+
+  logout() {
+    this.loggedIn = false;
+    this.loggedInChange.emit(false); // Notify parent
   }
 }
