@@ -1,0 +1,26 @@
+<div class="card mx-auto" style="max-width: 500px">
+  <div class="card-body">
+    <h2 class="card-title mb-4">Register</h2>
+    <form #registerForm="ngForm" (ngSubmit)="register()">
+      <div class="mb-3">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Username"
+          name="Username"
+          [(ngModel)]="model.Username"
+        />
+      </div>
+      <div class="mb-3">
+        <input
+          type="password"
+          class="form-control"
+          placeholder="Password"
+          name="Password"
+          [(ngModel)]="model.Password"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+</div>
