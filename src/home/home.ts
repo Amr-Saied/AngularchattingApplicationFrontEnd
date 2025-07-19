@@ -19,4 +19,8 @@ export class Home implements OnInit {
   registerToggle() {
     this.registerMode = !this.registerMode;
   }
+
+  goBackToWelcome() {
+    this.registerMode = false;
+  }
 }

@@ -34,30 +34,48 @@
         </ng-template>
       </ul>
 
+      <!-- Enhanced Login Form -->
       <form
         #loginForm="ngForm"
-        class="d-flex"
+        class="d-flex align-items-center"
         role="Login"
         (ngSubmit)="login()"
         *ngIf="!loggedIn"
       >
-        <input
-          class="form-control me-2"
-          type="text"
-          placeholder="Username"
-          aria-label="Username"
-          [(ngModel)]="model.Username"
-          name="Username"
-        />
-        <input
-          class="form-control me-2"
-          type="password"
-          placeholder="Password"
-          aria-label="Password"
-          [(ngModel)]="model.Password"
-          name="Password"
-        />
-        <button class="btn btn-outline-success" type="submit">Login</button>
+        <div class="input-group me-2" style="max-width: 200px">
+          <span class="input-group-text bg-light border-end-0">
+            <i class="fas fa-user text-muted"></i>
+          </span>
+          <input
+            class="form-control border-start-0"
+            type="text"
+            placeholder="Username"
+            aria-label="Username"
+            [(ngModel)]="model.Username"
+            name="Username"
+            required
+          />
+        </div>
+
+        <div class="input-group me-2" style="max-width: 200px">
+          <span class="input-group-text bg-light border-end-0">
+            <i class="fas fa-lock text-muted"></i>
+          </span>
+          <input
+            class="form-control border-start-0"
+            type="password"
+            placeholder="Password"
+            aria-label="Password"
+            [(ngModel)]="model.Password"
+            name="Password"
+            required
+          />
+        </div>
+
+        <button class="btn btn-success px-4" type="submit">
+          <i class="fas fa-sign-in-alt me-1"></i>
+          Login
+        </button>
       </form>
 
       <div class="dropdown ms-3" *ngIf="loggedIn">
@@ -68,14 +86,25 @@
           data-bs-toggle="dropdown"
           aria-expanded="false"
         >
+          <i class="fas fa-user-circle me-1"></i>
           Welcome {{ model.Username }}
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-          <li><a class="dropdown-item" href="#">Profile</a></li>
           <li>
-            <a class="dropdown-item" href="#" (click)="logout()">Logout</a>
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-user me-2"></i>Profile</a
+            >
           </li>
-          <li><a class="dropdown-item" href="#">Settings</a></li>
+          <li>
+            <a class="dropdown-item" href="#" (click)="logout()">
+              <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="#"
+              ><i class="fas fa-cog me-2"></i>Settings</a
+            >
+          </li>
         </ul>
       </div>
     </div>
