@@ -1,0 +1,19 @@
+<div class="container">
+  <div class="container text-center" *ngIf="!registerMode">
+    <div class="welcome-section mb-5">
+      <h1 class="display-4">Welcome To ChatApp</h1>
+      <p class="lead">Connect with People and Expand Your Network!</p>
+    </div>
+
+    <div class="buttons-section mb-4">
+      <button class="btn btn-success me-3" (click)="registerToggle()">
+        Register
+      </button>
+      <button class="btn btn-info">Learn More</button>
+    </div>
+  </div>
+
+  <div class="register-form" *ngIf="registerMode">
+    <app-register></app-register>
+  </div>
+</div>
