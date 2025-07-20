@@ -11,36 +11,6 @@
         </div>
 
         <div class="card-body p-4">
-          <!-- Error Message -->
-          <div
-            *ngIf="errorMessage"
-            class="alert alert-danger alert-dismissible fade show"
-            role="alert"
-          >
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            {{ errorMessage }}
-            <button
-              type="button"
-              class="btn-close"
-              (click)="errorMessage = ''"
-            ></button>
-          </div>
-
-          <!-- Success Message -->
-          <div
-            *ngIf="successMessage"
-            class="alert alert-success alert-dismissible fade show"
-            role="alert"
-          >
-            <i class="fas fa-check-circle me-2"></i>
-            {{ successMessage }}
-            <button
-              type="button"
-              class="btn-close"
-              (click)="successMessage = ''"
-            ></button>
-          </div>
-
           <form #registerForm="ngForm" (ngSubmit)="register()">
             <div class="mb-3">
               <label for="username" class="form-label">
@@ -58,7 +28,6 @@
                   placeholder="Enter your username"
                   name="Username"
                   [(ngModel)]="model.Username"
-                  (input)="onInputChange()"
                   required
                   minlength="3"
                   #username="ngModel"
@@ -101,7 +70,6 @@
                   placeholder="Enter your password"
                   name="Password"
                   [(ngModel)]="model.Password"
-                  (input)="onInputChange()"
                   required
                   minlength="6"
                   #password="ngModel"

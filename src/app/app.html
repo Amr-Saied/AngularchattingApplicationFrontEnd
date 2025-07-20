@@ -1,13 +1,4 @@
-<app-nav (loggedInChange)="onLoggedInChange($event)"></app-nav>
-
+<app-nav></app-nav>
 <div class="container mt-5 pt-5">
-  <div class="container" *ngIf="!loggedIn">
-    <app-home></app-home>
-  </div>
-  <div class="container" *ngIf="loggedIn && isAdmin">
-    <app-admin></app-admin>
-  </div>
-  <div class="container" *ngIf="loggedIn && !isAdmin">
-    <app-home></app-home>
-  </div>
+  <router-outlet></router-outlet>
 </div>

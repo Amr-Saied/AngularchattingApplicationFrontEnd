@@ -1,37 +1,37 @@
 // nav.ts
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Account } from '../_services/account';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
 import { LoggedUser } from '../_models/logged-user';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
   templateUrl: './nav.html',
   styleUrls: ['./nav.css'],
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
 })
 export class Nav implements OnInit {
   model: any = {};
   loggedIn = false;
 
-  @Output() loggedInChange = new EventEmitter<boolean>();
-
-  constructor(private account: Account) {}
+  constructor(
+    private account: Account,
+    private router: Router,
+    private toastr: ToastrService
+  ) {}
 
   ngOnInit() {
     // Check if user is already logged in from local storage
     this.loggedIn = this.account.isLoggedIn();
-    if (this.loggedIn) {
-      this.loggedInChange.emit(true);
-    }
   }
 
   login() {
     this.account.login(this.model).subscribe({
       next: (response: any) => {
-        // console.log(response);
         this.loggedIn = true;
 
         // Save logged user data to local storage
@@ -44,10 +44,19 @@ export class Nav implements OnInit {
           this.account.saveLoggedUserToStorage(loggedUser);
         }
 
-        this.loggedInChange.emit(true); // Notify parent
+        // Show success message
+        this.toastr.success(`Welcome back, ${response.username}!`);
+
+        // Redirect based on user role
+        if (response.role === 'Admin') {
+          this.router.navigate(['/admin']);
+        } else {
+          this.router.navigate(['/home']);
+        }
       },
       error: (error) => {
         console.log(error);
+        this.toastr.error('Login failed. Please check your credentials.');
       },
     });
   }
@@ -56,6 +65,9 @@ export class Nav implements OnInit {
     this.loggedIn = false;
     // Clear logged user data from local storage
     this.account.clearLoggedUserFromStorage();
-    this.loggedInChange.emit(false); // Notify parent
+    // Show logout message
+    this.toastr.info('You have been logged out successfully');
+    // Redirect to home after logout
+    this.router.navigate(['/home']);
   }
 }
