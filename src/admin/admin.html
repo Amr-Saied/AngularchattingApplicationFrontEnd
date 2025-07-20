@@ -1,0 +1,41 @@
+<div class="admin-dashboard">
+  <div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome to the administration panel</p>
+  </div>
+
+  <div class="dashboard-content">
+    <div class="management-section">
+      <h2>User Management</h2>
+      <button class="btn btn-primary" (click)="toggleUsers()">
+        {{ showUsers ? "Hide Users" : "Show Users" }}
+      </button>
+    </div>
+
+    <div class="users-section" *ngIf="showUsers">
+      <div class="loading" *ngIf="loading">
+        <p>Loading users...</p>
+      </div>
+
+      <div class="users-list" *ngIf="!loading && users.length > 0">
+        <h3>Registered Users</h3>
+        <div class="user-card" *ngFor="let user of users">
+          <div class="user-info">
+            <span class="user-id">ID: {{ user.id }}</span>
+            <span class="username">{{ user.userName }}</span>
+            <span
+              class="user-role"
+              [class]="'role-' + user.role?.toLowerCase()"
+            >
+              {{ user.role || "User" }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-users" *ngIf="!loading && users.length === 0">
+        <p>No users found.</p>
+      </div>
+    </div>
+  </div>
+</div>

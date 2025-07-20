@@ -6,6 +6,7 @@ import { ChangeDetectorRef } from '@angular/core';
 import { Nav } from '../nav/nav';
 import { Account } from '../_services/account';
 import { Home } from '../home/home';
+import { AdminComponent } from '../admin/admin';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -13,10 +14,11 @@ import { RouterModule } from '@angular/router';
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
   standalone: true,
-  imports: [CommonModule, Nav, Home, RouterModule],
+  imports: [CommonModule, Nav, Home, AdminComponent, RouterModule],
 })
 export class App implements OnInit {
   public loggedIn = false;
+  public isAdmin = false;
   // protected title = 'chatting app';
   protected Users: User[] = [];
   protected usersUrlHttp = 'http://localhost:5194/Users/GetUsers';
@@ -32,23 +34,27 @@ export class App implements OnInit {
     // Check if user is already logged in from local storage
     this.loggedIn = this.account.isLoggedIn();
 
+    // Check if user is admin
+    if (this.loggedIn) {
+      const user = this.account.getLoggedUserFromStorage();
+      this.isAdmin = user?.role === 'Admin';
+    }
+
     const usersUrl =
       window.location.protocol === 'https:'
         ? this.usersUrlHttps
         : this.usersUrlHttp;
-    this.http.get(usersUrl).subscribe({
-      next: (response) => {
-        this.Users = response as User[];
-        console.log(this.Users);
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error fetching users from the backend', error);
-      },
-    });
   }
 
   onLoggedInChange(loggedIn: boolean) {
     this.loggedIn = loggedIn;
+
+    // Update admin status when login state changes
+    if (loggedIn) {
+      const user = this.account.getLoggedUserFromStorage();
+      this.isAdmin = user?.role === 'Admin';
+    } else {
+      this.isAdmin = false;
+    }
   }
 }

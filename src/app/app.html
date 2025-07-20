@@ -4,4 +4,10 @@
   <div class="container" *ngIf="!loggedIn">
     <app-home></app-home>
   </div>
+  <div class="container" *ngIf="loggedIn && isAdmin">
+    <app-admin></app-admin>
+  </div>
+  <div class="container" *ngIf="loggedIn && !isAdmin">
+    <app-home></app-home>
+  </div>
 </div>

@@ -31,7 +31,7 @@ export class Nav implements OnInit {
   login() {
     this.account.login(this.model).subscribe({
       next: (response: any) => {
-        console.log(response);
+        // console.log(response);
         this.loggedIn = true;
 
         // Save logged user data to local storage
@@ -39,6 +39,7 @@ export class Nav implements OnInit {
           const loggedUser: LoggedUser = {
             username: response.username,
             token: response.token,
+            role: response.role,
           };
           this.account.saveLoggedUserToStorage(loggedUser);
         }

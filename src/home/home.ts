@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Register } from '../register/register';
+import { Account } from '../_services/account';
 
 @Component({
   selector: 'app-home',
@@ -13,8 +14,13 @@ import { Register } from '../register/register';
 })
 export class Home implements OnInit {
   registerMode = false;
+  loggedIn = false;
 
-  ngOnInit() {}
+  constructor(private accountService: Account) {}
+
+  ngOnInit() {
+    this.loggedIn = this.accountService.isLoggedIn();
+  }
 
   registerToggle() {
     this.registerMode = !this.registerMode;
