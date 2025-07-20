@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { LoggedUser } from '../_models/logged-user';
 
 @Injectable({
@@ -8,6 +9,7 @@ import { LoggedUser } from '../_models/logged-user';
 export class Account {
   baseUrl: string;
   private readonly LOGGED_USER_KEY = 'loggedUser';
+  private loginStateSubject = new BehaviorSubject<boolean>(false);
 
   constructor(private http: HttpClient) {
     // Check if HTTPS is available
@@ -15,6 +17,9 @@ export class Account {
     this.baseUrl = isHttps
       ? 'https://localhost:7095/api/account'
       : 'http://localhost:5194/api/account';
+
+    // Initialize login state
+    this.loginStateSubject.next(this.isLoggedIn());
   }
 
   login(model: any) {
@@ -28,6 +33,7 @@ export class Account {
   // Save logged user data to local storage
   saveLoggedUserToStorage(loggedUser: LoggedUser) {
     localStorage.setItem(this.LOGGED_USER_KEY, JSON.stringify(loggedUser));
+    this.loginStateSubject.next(true);
   }
 
   // Get logged user from local storage
@@ -44,5 +50,11 @@ export class Account {
   // Clear logged user data from local storage
   clearLoggedUserFromStorage() {
     localStorage.removeItem(this.LOGGED_USER_KEY);
+    this.loginStateSubject.next(false);
+  }
+
+  // Get login state as observable
+  getLoginState(): Observable<boolean> {
+    return this.loginStateSubject.asObservable();
   }
 }

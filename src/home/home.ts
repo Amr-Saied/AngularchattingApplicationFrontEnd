@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Register } from '../register/register';
+import { Account } from '../_services/account';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -11,12 +13,37 @@ import { Register } from '../register/register';
   styleUrl: './home.css',
   standalone: true,
 })
-export class Home implements OnInit {
+export class Home implements OnInit, OnDestroy {
   registerMode = false;
+  loggedIn = false;
+  private loginSubscription?: Subscription;
 
-  ngOnInit() {}
+  constructor(private accountService: Account) {}
+
+  ngOnInit() {
+    this.checkLoginStatus();
+    this.loginSubscription = this.accountService
+      .getLoginState()
+      .subscribe((isLoggedIn) => {
+        this.loggedIn = isLoggedIn;
+      });
+  }
+
+  ngOnDestroy() {
+    if (this.loginSubscription) {
+      this.loginSubscription.unsubscribe();
+    }
+  }
+
+  checkLoginStatus() {
+    this.loggedIn = this.accountService.isLoggedIn();
+  }
 
   registerToggle() {
     this.registerMode = !this.registerMode;
+  }
+
+  goBackToWelcome() {
+    this.registerMode = false;
   }
 }

@@ -1,26 +1,146 @@
-<div class="card mx-auto" style="max-width: 500px">
-  <div class="card-body">
-    <h2 class="card-title mb-4">Register</h2>
-    <form #registerForm="ngForm" (ngSubmit)="register()">
-      <div class="mb-3">
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Username"
-          name="Username"
-          [(ngModel)]="model.Username"
-        />
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white text-center py-3">
+          <h2 class="card-title mb-0">
+            <i class="fas fa-user-plus me-2"></i>
+            Create Account
+          </h2>
+          <p class="mb-0 mt-2 opacity-75">Join our community today!</p>
+        </div>
+
+        <div class="card-body p-4">
+          <form #registerForm="ngForm" (ngSubmit)="register()">
+            <div class="mb-3">
+              <label for="username" class="form-label">
+                <i class="fas fa-user me-1 text-primary"></i>
+                Username
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">
+                  <i class="fas fa-user text-muted"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="username"
+                  placeholder="Enter your username"
+                  name="Username"
+                  [(ngModel)]="model.Username"
+                  required
+                  minlength="3"
+                  #username="ngModel"
+                />
+              </div>
+              <div
+                class="form-text"
+                *ngIf="username.invalid && username.touched"
+              >
+                <small
+                  class="text-danger"
+                  *ngIf="username.errors?.['required']"
+                >
+                  <i class="fas fa-exclamation-circle me-1"></i>Username is
+                  required
+                </small>
+                <small
+                  class="text-danger"
+                  *ngIf="username.errors?.['minlength']"
+                >
+                  <i class="fas fa-exclamation-circle me-1"></i>Username must be
+                  at least 3 characters
+                </small>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">
+                <i class="fas fa-lock me-1 text-primary"></i>
+                Password
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">
+                  <i class="fas fa-lock text-muted"></i>
+                </span>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  placeholder="Enter your password"
+                  name="Password"
+                  [(ngModel)]="model.Password"
+                  required
+                  minlength="6"
+                  #password="ngModel"
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                >
+                  <i class="fas fa-eye" id="passwordToggle"></i>
+                </button>
+              </div>
+              <div
+                class="form-text"
+                *ngIf="password.invalid && password.touched"
+              >
+                <small
+                  class="text-danger"
+                  *ngIf="password.errors?.['required']"
+                >
+                  <i class="fas fa-exclamation-circle me-1"></i>Password is
+                  required
+                </small>
+                <small
+                  class="text-danger"
+                  *ngIf="password.errors?.['minlength']"
+                >
+                  <i class="fas fa-exclamation-circle me-1"></i>Password must be
+                  at least 6 characters
+                </small>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2">
+              <button
+                type="submit"
+                class="btn btn-primary btn-lg"
+                [disabled]="registerForm.invalid || isLoading"
+              >
+                <span *ngIf="!isLoading">
+                  <i class="fas fa-user-plus me-2"></i>
+                  Create Account
+                </span>
+                <span *ngIf="isLoading">
+                  <i class="fas fa-spinner fa-spin me-2"></i>
+                  Creating Account...
+                </span>
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-lg"
+                (click)="cancelRegistration()"
+                [disabled]="isLoading"
+              >
+                <i class="fas fa-times me-2"></i>
+                Cancel
+              </button>
+            </div>
+
+            <div class="text-center mt-3">
+              <small class="text-muted">
+                By creating an account, you agree to our
+                <a href="#" class="text-decoration-none">Terms of Service</a>
+                and
+                <a href="#" class="text-decoration-none">Privacy Policy</a>
+              </small>
+            </div>
+          </form>
+        </div>
       </div>
-      <div class="mb-3">
-        <input
-          type="password"
-          class="form-control"
-          placeholder="Password"
-          name="Password"
-          [(ngModel)]="model.Password"
-        />
-      </div>
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </div>
   </div>
 </div>

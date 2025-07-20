@@ -1,5 +1,6 @@
 <div class="container">
-  <div class="container text-center" *ngIf="!registerMode">
+  <!-- Welcome section for non-logged in users -->
+  <div class="container text-center" *ngIf="!registerMode && !loggedIn">
     <div class="welcome-section mb-5">
       <h1 class="display-4">Welcome To ChatApp</h1>
       <p class="lead">Connect with People and Expand Your Network!</p>
@@ -13,7 +14,17 @@
     </div>
   </div>
 
-  <div class="register-form" *ngIf="registerMode">
-    <app-register></app-register>
+  <!-- Register form for non-logged in users -->
+  <div class="register-form" *ngIf="registerMode && !loggedIn">
+    <app-register (cancelClicked)="goBackToWelcome()"></app-register>
+  </div>
+
+  <!-- Main content for logged in users -->
+  <div class="main-content" *ngIf="loggedIn">
+    <h2>Welcome back!</h2>
+    <p>
+      You are now logged in. Use the navigation bar to access different
+      sections.
+    </p>
   </div>
 </div>
