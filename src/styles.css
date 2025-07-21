@@ -1,3 +1,294 @@
-/* You can add global styles to this file, and also import other style files */
 @import "bootstrap/dist/css/bootstrap.min.css";
 @import "ngx-toastr/toastr";
+
+/* Unified Theme Variables */
+:root {
+  --main-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --main-gradient-hover: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  --main-bg: #f5f6fa;
+  --main-card-bg: #fff;
+  --main-card-radius: 15px;
+  --main-btn-radius: 8px;
+  --main-btn-padding: 12px 30px;
+  --main-btn-font-weight: 600;
+  --main-btn-color: #fff;
+  --main-btn-bg: #667eea;
+  --main-btn-bg-hover: #5a6fd8;
+  --main-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --main-navbar-radius: 0 0 16px 16px;
+}
+
+body {
+  background: var(--main-bg);
+}
+
+/* Unified Card Style */
+.main-card,
+.card {
+  background: var(--main-card-bg);
+  border-radius: var(--main-card-radius);
+  box-shadow: var(--main-shadow);
+  transition: all 0.3s ease;
+}
+
+.card-header,
+.main-card-header {
+  border-radius: var(--main-card-radius) var(--main-card-radius) 0 0 !important;
+  background: var(--main-gradient) !important;
+  color: #fff;
+}
+
+/* Unified Button Styles */
+.btn-main,
+.btn-success,
+.btn-primary {
+  background: var(--main-gradient);
+  border: none;
+  border-radius: var(--main-btn-radius);
+  padding: var(--main-btn-padding);
+  font-weight: var(--main-btn-font-weight);
+  color: var(--main-btn-color);
+  transition: all 0.3s ease;
+}
+
+.btn-main:hover,
+.btn-success:hover,
+.btn-primary:hover {
+  background: var(--main-gradient-hover);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+  border-radius: var(--main-btn-radius);
+  border: 2px solid #6c757d;
+  background-color: transparent;
+  color: #6c757d;
+  padding: var(--main-btn-padding);
+  font-weight: var(--main-btn-font-weight);
+  transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+}
+
+/* Navbar Unified Style */
+.navbar {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: var(--main-gradient) !important;
+  border-radius: var(--main-navbar-radius);
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #fff !important;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+  color: #f8f9fa !important;
+  transform: scale(1.05);
+}
+
+/* Utility Classes */
+.theme-gradient-bg {
+  background: var(--main-gradient) !important;
+  color: #fff;
+}
+
+.theme-card {
+  background: var(--main-card-bg);
+  border-radius: var(--main-card-radius);
+  box-shadow: var(--main-shadow);
+}
+
+.theme-btn {
+  background: var(--main-gradient);
+  color: #fff;
+  border-radius: var(--main-btn-radius);
+  font-weight: var(--main-btn-font-weight);
+  transition: all 0.3s ease;
+}
+
+.theme-btn:hover {
+  background: var(--main-gradient-hover);
+  color: #fff;
+}
+
+/* Form Controls */
+.form-control {
+  border-radius: var(--main-btn-radius);
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+  padding: 12px 15px;
+}
+
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  transform: translateY(-1px);
+}
+
+.input-group-text {
+  border-radius: var(--main-btn-radius) 0 0 var(--main-btn-radius);
+  border: 2px solid #e9ecef;
+  border-right: none;
+  background-color: #f8f9fa;
+  color: #6c757d;
+}
+
+.input-group .form-control {
+  border-left: none;
+  border-radius: 0 var(--main-btn-radius) var(--main-btn-radius) 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .main-card,
+  .card {
+    margin: 10px;
+  }
+  .btn-main,
+  .btn-success,
+  .btn-primary,
+  .btn-outline-secondary {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 20px;
+  }
+}
+
+/* Unified Toastr Styles */
+.toast-bottom-right,
+.toast-top-right,
+.toast {
+  right: 2.5rem !important;
+  left: auto !important;
+  bottom: 2.5rem !important;
+  top: auto !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.toast {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12) !important;
+  font-family: inherit;
+  font-size: 1.15rem;
+  padding: 18px 32px !important;
+  min-width: 320px;
+  max-width: 400px;
+  color: #fff !important;
+  background: var(--main-gradient) !important;
+  border: none !important;
+  margin-bottom: 1rem !important;
+  pointer-events: auto;
+}
+
+.toast-success {
+  background: var(--main-gradient) !important;
+  color: #fff !important;
+}
+
+.toast-info {
+  background: var(--main-gradient-hover) !important;
+  color: #fff !important;
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+  color: #fff !important;
+}
+
+.toast-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+  color: #212529 !important;
+}
+
+.toast .toast-message {
+  color: inherit !important;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+.toast .toast-close-button {
+  color: #fff !important;
+  opacity: 0.8;
+  font-size: 1.3rem;
+  transition: opacity 0.2s;
+}
+.toast .toast-close-button:hover {
+  opacity: 1;
+}
+
+/* Stronger Toastr Overrides for Modern Look */
+#toast-container > div,
+.toast,
+.toast-error,
+.toast-success,
+.toast-info,
+.toast-warning {
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
+  padding: 22px 36px !important;
+  font-size: 1.18rem !important;
+  font-weight: 500 !important;
+  min-width: 340px !important;
+  max-width: 420px !important;
+  margin-bottom: 1.2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1.6 !important;
+  border: none !important;
+  opacity: 0.98 !important;
+}
+
+#toast-container > .toast-error,
+.toast-error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+  color: #fff !important;
+}
+
+#toast-container > .toast-success,
+.toast-success {
+  background: var(--main-gradient) !important;
+  color: #fff !important;
+}
+
+#toast-container > .toast-info,
+.toast-info {
+  background: var(--main-gradient-hover) !important;
+  color: #fff !important;
+}
+
+#toast-container > .toast-warning,
+.toast-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%) !important;
+  color: #212529 !important;
+}
+
+#toast-container > div .toast-close-button,
+.toast .toast-close-button {
+  color: #fff !important;
+  opacity: 0.8 !important;
+  font-size: 1.3rem !important;
+  position: absolute !important;
+  right: 18px !important;
+  top: 12px !important;
+}
+#toast-container > div .toast-close-button:hover,
+.toast .toast-close-button:hover {
+  opacity: 1 !important;
+}
