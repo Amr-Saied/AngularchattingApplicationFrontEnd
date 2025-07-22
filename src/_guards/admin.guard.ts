@@ -24,7 +24,7 @@ export class AdminGuard implements CanActivate {
         return false;
       }
     } else {
-      this.toastr.error('Please login to access admin panel');
+      this.toastr.error('Admins only!');
       this.router.navigate(['/home']);
       return false;
     }

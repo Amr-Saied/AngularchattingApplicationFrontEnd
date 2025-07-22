@@ -7,6 +7,9 @@ import { Home } from '../home/home';
 import { AdminComponent } from '../admin/admin';
 import { AuthGuard } from '../_guards/auth.guard';
 import { AdminGuard } from '../_guards/admin.guard';
+import { NotFoundComponent } from './not-found.component';
+import { ServerErrorComponent } from './server-error.component';
+import { BuggyComponenet } from '../buggy-componenet/buggy-componenet';
 
 export const routes: Routes = [
   {
@@ -42,5 +45,24 @@ export const routes: Routes = [
     path: 'admin',
     component: AdminComponent,
     canActivate: [AdminGuard],
+  },
+  {
+    path: 'server-error',
+    component: ServerErrorComponent,
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'not-found',
+    component: NotFoundComponent,
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'buggy-test',
+    component: BuggyComponenet,
+    canActivate: [AdminGuard],
+  },
+  {
+    path: '**',
+    component: NotFoundComponent,
   },
 ];
