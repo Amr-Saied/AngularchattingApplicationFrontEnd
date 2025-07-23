@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -17,12 +17,15 @@ export class Register {
 
   @Output() cancelClicked = new EventEmitter<void>();
 
-  constructor(private account: Account, private toastr: ToastrService) {}
+  constructor(
+    private accountService: AccountService,
+    private toastr: ToastrService
+  ) {}
 
   register() {
     this.isLoading = true;
 
-    this.account.register(this.model).subscribe({
+    this.accountService.register(this.model).subscribe({
       next: (response: any) => {
         console.log(response);
         this.isLoading = false;

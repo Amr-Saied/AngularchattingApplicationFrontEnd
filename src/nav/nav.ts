@@ -1,6 +1,6 @@
 // nav.ts
 import { Component, OnInit } from '@angular/core';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -19,18 +19,18 @@ export class Nav implements OnInit {
   loggedIn = false;
 
   constructor(
-    private account: Account,
+    private accountService: AccountService,
     private router: Router,
     private toastr: ToastrService
   ) {}
 
   ngOnInit() {
     // Check if user is already logged in from local storage
-    this.loggedIn = this.account.isLoggedIn();
+    this.loggedIn = this.accountService.isLoggedIn();
   }
 
   login() {
-    this.account.login(this.model).subscribe({
+    this.accountService.login(this.model).subscribe({
       next: (response: any) => {
         this.loggedIn = true;
 
@@ -41,7 +41,7 @@ export class Nav implements OnInit {
             token: response.token,
             role: response.role,
           };
-          this.account.saveLoggedUserToStorage(loggedUser);
+          this.accountService.saveLoggedUserToStorage(loggedUser);
         }
 
         // Show success message
@@ -64,7 +64,7 @@ export class Nav implements OnInit {
   logout() {
     this.loggedIn = false;
     // Clear logged user data from local storage
-    this.account.clearLoggedUserFromStorage();
+    this.accountService.clearLoggedUserFromStorage();
     // Show logout message
     this.toastr.info('You have been logged out successfully');
     // Redirect to home after logout

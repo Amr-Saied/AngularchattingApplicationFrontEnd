@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Injectable({
@@ -8,13 +8,13 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class AuthGuard implements CanActivate {
   constructor(
-    private account: Account,
+    private accountService: AccountService,
     private router: Router,
     private toastr: ToastrService
   ) {}
 
   canActivate(): boolean {
-    if (this.account.isLoggedIn()) {
+    if (this.accountService.isLoggedIn()) {
       return true;
     } else {
       this.toastr.error('Please login to access this page');

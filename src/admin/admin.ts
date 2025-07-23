@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 import { User } from '../_models/user';
-import { Users } from '../_services/users';
+import { UsersService } from '../_services/users.service';
 
 @Component({
   selector: 'app-admin',
@@ -17,7 +17,10 @@ export class AdminComponent implements OnInit {
   showUsers = false;
   loading = false;
 
-  constructor(private accountService: Account, private usersService: Users) {}
+  constructor(
+    private accountService: AccountService,
+    private usersService: UsersService
+  ) {}
 
   ngOnInit(): void {
     // Check if user is admin when component loads

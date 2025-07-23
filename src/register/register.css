@@ -1,95 +1,5 @@
 /* Registration Form Styling */
-.card {
-  transition: all 0.3s ease;
-  border-radius: 15px;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-}
-
-.card-header {
-  border-radius: 15px 15px 0 0 !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-}
-
-.form-control {
-  border-radius: 8px;
-  border: 2px solid #e9ecef;
-  transition: all 0.3s ease;
-  padding: 12px 15px;
-}
-
-.form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-  transform: translateY(-1px);
-}
-
-.input-group-text {
-  border-radius: 8px 0 0 8px;
-  border: 2px solid #e9ecef;
-  border-right: none;
-  background-color: #f8f9fa;
-}
-
-.input-group .form-control {
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 8px;
-  padding: 12px 30px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.btn-primary:disabled {
-  background: #6c757d;
-  transform: none;
-  box-shadow: none;
-}
-
-.btn-outline-secondary {
-  border-radius: 8px;
-  border: 2px solid #6c757d;
-  background-color: transparent;
-  color: #6c757d;
-  padding: 12px 30px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-outline-secondary:hover {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
-}
-
-.btn-outline-secondary:disabled {
-  background-color: #e9ecef;
-  border-color: #e9ecef;
-  color: #6c757d;
-  transform: none;
-  box-shadow: none;
-}
-
-.form-label {
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 8px;
-}
+/* Only keep register-specific layout or animation. Remove button, card, and form styles now in styles.css */
 
 .text-danger {
   font-size: 0.875rem;
@@ -150,12 +60,6 @@
 }
 
 /* Animation for form elements */
-.form-control,
-.btn,
-.input-group-text {
-  animation: fadeInUp 0.6s ease-out;
-}
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -180,15 +84,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .card {
-    margin: 10px;
-  }
-
-  .btn-primary,
-  .btn-outline-secondary {
-    padding: 10px 20px;
-  }
-
   .alert {
     padding: 12px 15px;
     font-size: 0.9rem;

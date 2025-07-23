@@ -15,10 +15,12 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
         <li class="nav-item" *ngIf="loggedIn; else empty1">
-          <a class="nav-link" routerLink="/members">Profiles</a>
+          <a class="nav-link" routerLink="/members">Explore Members</a>
         </li>
         <ng-template #empty1>
-          <li class="nav-item invisible"><a class="nav-link">Profiles</a></li>
+          <li class="nav-item invisible">
+            <a class="nav-link">Explore Members</a>
+          </li>
         </ng-template>
         <li class="nav-item" *ngIf="loggedIn; else empty2">
           <a class="nav-link" routerLink="/lists">Lists</a>

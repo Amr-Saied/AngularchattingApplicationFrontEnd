@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Injectable({
@@ -8,14 +8,14 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class AdminGuard implements CanActivate {
   constructor(
-    private account: Account,
+    private accountService: AccountService,
     private router: Router,
     private toastr: ToastrService
   ) {}
 
   canActivate(): boolean {
-    if (this.account.isLoggedIn()) {
-      const user = this.account.getLoggedUserFromStorage();
+    if (this.accountService.isLoggedIn()) {
+      const user = this.accountService.getLoggedUserFromStorage();
       if (user?.role === 'Admin') {
         return true;
       } else {
@@ -24,7 +24,7 @@ export class AdminGuard implements CanActivate {
         return false;
       }
     } else {
-      this.toastr.error('Please login to access admin panel');
+      this.toastr.error('Admins only!');
       this.router.navigate(['/home']);
       return false;
     }
