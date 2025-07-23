@@ -9,11 +9,14 @@ import { FormsModule } from '@angular/forms';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
 import 'zone.js';
+import { tokenInterceptor } from './_interceptors/token-interceptor';
 import { errorHandlerInterceptor } from './_interceptors/error-handler-interceptor';
 
 bootstrapApplication(App, {
   providers: [
-    provideHttpClient(withInterceptors([errorHandlerInterceptor])),
+    provideHttpClient(
+      withInterceptors([tokenInterceptor, errorHandlerInterceptor])
+    ),
     provideRouter(routes),
     provideAnimations(),
     provideToastr({

@@ -1,15 +1,21 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { Account } from '../_services/account';
+import { CommonModule } from '@angular/common';
+import { AccountService } from '../_services/account.service';
 
 @Component({
   selector: 'app-server-error',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <div class="error-page">
-      <h1>500</h1>
+      <h1>{{ error?.statusCode || 500 }}</h1>
       <h2>Server Error</h2>
-      <p>Oops! Something went wrong on our end.<br />Please try again later.</p>
+      <p *ngIf="error?.message">{{ error.message }}</p>
+      <div *ngIf="isAdmin && error?.details">
+        <h4>Details:</h4>
+        <pre>{{ error.details }}</pre>
+      </div>
       <button (click)="goBack()" class="btn btn-main mt-3">
         {{ isAdmin ? 'Go to Admin Panel' : 'Go to Home' }}
       </button>
@@ -39,6 +45,26 @@ import { Account } from '../_services/account';
         font-size: 1.2rem;
         margin-bottom: 2rem;
       }
+      .error-details {
+        text-align: left;
+        margin: 2rem auto;
+        max-width: 800px;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      .error-details h3 {
+        color: #ff6b6b;
+        margin-bottom: 1rem;
+      }
+      .error-details pre {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 1rem;
+        border-radius: 4px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
       .btn-main {
         background: var(--main-gradient);
         color: #fff;
@@ -57,10 +83,16 @@ import { Account } from '../_services/account';
 })
 export class ServerErrorComponent {
   isAdmin = false;
-  constructor(private router: Router, private account: Account) {
-    const user = this.account.getLoggedUserFromStorage();
+  error: any;
+
+  constructor(private router: Router, private accountService: AccountService) {
+    const user = this.accountService.getLoggedUserFromStorage();
     this.isAdmin = !!user && user.role === 'Admin';
+    // Get error details from navigation state
+    const nav = this.router.getCurrentNavigation();
+    this.error = nav?.extras?.state?.['error'];
   }
+
   goBack() {
     if (this.isAdmin) {
       this.router.navigate(['/admin']);

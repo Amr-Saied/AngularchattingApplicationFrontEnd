@@ -1,0 +1,29 @@
+<div class="member-card main-card">
+  <div class="member-photo">
+    <img
+      [src]="
+        member.photoUrl || 'https://randomuser.me/api/portraits/lego/1.jpg'
+      "
+      alt="{{ member.userName }}'s photo"
+    />
+  </div>
+  <div class="member-info">
+    <h5 class="member-name">{{ member.knownAs || member.userName }}</h5>
+    <p class="member-city">{{ member.city }}</p>
+    <div class="member-actions mt-3 d-flex justify-content-center gap-2">
+      <a
+        [routerLink]="['/member', member.id]"
+        class="btn btn-main btn-xs"
+        title="Details"
+      >
+        <i class="fas fa-eye"></i>
+      </a>
+      <button class="btn btn-outline-secondary btn-xs" title="Like">
+        <i class="far fa-heart"></i>
+      </button>
+      <button class="btn btn-outline-secondary btn-xs" title="Message">
+        <i class="far fa-envelope"></i>
+      </button>
+    </div>
+  </div>
+</div>

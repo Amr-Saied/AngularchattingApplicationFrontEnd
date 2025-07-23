@@ -49,12 +49,10 @@ export const routes: Routes = [
   {
     path: 'server-error',
     component: ServerErrorComponent,
-    canActivate: [AdminGuard],
   },
   {
     path: 'not-found',
     component: NotFoundComponent,
-    canActivate: [AdminGuard],
   },
   {
     path: 'buggy-test',

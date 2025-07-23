@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Register } from '../register/register';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -18,7 +18,7 @@ export class Home implements OnInit, OnDestroy {
   loggedIn = false;
   private loginSubscription?: Subscription;
 
-  constructor(private accountService: Account) {}
+  constructor(private accountService: AccountService) {}
 
   ngOnInit() {
     this.checkLoginStatus();

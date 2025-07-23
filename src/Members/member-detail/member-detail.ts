@@ -1,11 +1,37 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MemberService } from '../../_services/member.service';
+import { Member } from '../../_models/member';
 
 @Component({
   selector: 'app-member-detail',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './member-detail.html',
-  styleUrl: './member-detail.css'
+  styleUrl: './member-detail.css',
 })
-export class MemberDetail {
+export class MemberDetail implements OnInit {
+  member?: Member;
+  loading = true;
 
+  constructor(
+    private route: ActivatedRoute,
+    private memberService: MemberService
+  ) {}
+
+  ngOnInit() {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (id) {
+      this.memberService.getMemberById(id).subscribe({
+        next: (member) => {
+          this.member = member;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
+      });
+    }
+  }
 }

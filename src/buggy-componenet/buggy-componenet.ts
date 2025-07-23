@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-buggy-componenet',
@@ -10,7 +11,7 @@ import { Router } from '@angular/router';
   imports: [],
 })
 export class BuggyComponenet {
-  baseUrls = ['http://localhost:5194/Buggy/', 'https://localhost:7095/Buggy/'];
+  baseUrl = environment.apiUrl + 'Buggy';
 
   constructor(private http: HttpClient, private router: Router) {}
 
@@ -28,12 +29,10 @@ export class BuggyComponenet {
   }
 
   private callBoth(method: string) {
-    for (const url of this.baseUrls) {
-      this.http.get(url + method).subscribe({
-        next: () => {},
-        error: () => {},
-      });
-    }
+    this.http.get(this.baseUrl + method).subscribe({
+      next: () => {},
+      error: () => {},
+    });
   }
 
   goAdmin() {

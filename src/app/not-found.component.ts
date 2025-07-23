@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { Account } from '../_services/account';
+import { AccountService } from '../_services/account.service';
 
 @Component({
   selector: 'app-not-found',
@@ -57,8 +57,8 @@ import { Account } from '../_services/account';
 })
 export class NotFoundComponent {
   isAdmin = false;
-  constructor(private router: Router, private account: Account) {
-    const user = this.account.getLoggedUserFromStorage();
+  constructor(private router: Router, private accountService: AccountService) {
+    const user = this.accountService.getLoggedUserFromStorage();
     this.isAdmin = !!user && user.role === 'Admin';
   }
   goBack() {
