@@ -1,0 +1,280 @@
+/* General Body and Container Styling */
+.profile-container {
+  background-color: #f0f2f5; /* Light background for the page */
+  min-height: 100vh; /* Ensure it takes full viewport height */
+  padding-bottom: 30px; /* Space at the bottom */
+  overflow-x: hidden; /* Prevent horizontal scrollbar from banner */
+}
+
+/* Profile Banner */
+.profile-banner {
+  width: 100vw; /* Make banner width fill the entire viewport width */
+  height: 250px; /* Fixed height for consistency */
+  overflow: hidden; /* Hide overflow for the image */
+  position: relative;
+  margin-left: calc(50% - 50vw); /* Magic to stretch beyond parent container */
+  margin-right: calc(50% - 50vw);
+}
+
+.profile-banner-img {
+  /* Targeting the image directly */
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Cover the area, cropping if necessary */
+  object-position: center; /* Center the image */
+}
+
+/* Main Profile Content Wrapper */
+.profile-content-wrapper {
+  margin-top: -120px; /* Overlap the banner */
+  position: relative; /* For z-index to work */
+  z-index: 10; /* Bring content above the banner */
+  padding: 0 15px; /* Add horizontal padding for smaller screens */
+  box-sizing: border-box; /* Include padding in element's total width */
+}
+
+/* Main Profile Card - Centering and Size Control */
+.profile-card.main-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 2.5rem; /* Generous padding */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  max-width: 900px; /* Set a max-width for the card on larger screens */
+  width: 100%; /* Ensure it takes full available width up to max-width */
+  /* mx-auto in HTML handles the margin auto for centering */
+}
+
+/* Profile Header - Centering Profile Photo, Name, Meta, and Button */
+.profile-header {
+  display: flex;
+  flex-direction: column; /* Stacks vertically on small screens */
+  align-items: center; /* Centers items horizontally when stacked */
+  justify-content: center; /* Centers items vertically within the flex container */
+}
+
+/* Profile Photo */
+.profile-photo-wrapper {
+  margin-top: -100px; /* Pull photo further up to overlap banner */
+  margin-bottom: 20px; /* Space below photo */
+}
+
+.profile-photo {
+  width: 160px; /* Larger photo */
+  height: 160px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 7px solid #ffffff; /* Thicker white border */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Profile Info (Name, Meta, Button) */
+.profile-info {
+  text-align: center; /* Ensures name, meta, and button are centered when stacked */
+}
+
+.profile-name {
+  color: #6a0572;
+  font-size: 2.25rem;
+  word-break: break-word;
+}
+
+.profile-meta {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.profile-meta span i {
+  color: #764ba2;
+}
+
+/* Edit Profile Button */
+.btn-main {
+  background-color: #764ba2;
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.8rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.btn-main:hover {
+  background-color: #6a0572;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Section Cards (About & Gallery) */
+.profile-section-card {
+  background: #fdfdff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.05);
+  border: 1px solid #eee;
+}
+
+.section-title {
+  color: #6a0572;
+}
+
+/* About Content Refinement */
+.about-content {
+  max-height: 150px;
+  overflow-y: auto;
+  line-height: 1.7;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding-right: 5px;
+}
+
+/* Scrollbar styling for about-content (for modern browsers) */
+.about-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.about-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.about-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.about-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Photo Gallery Wrapper and Image Sizing FIXES */
+.gallery-wrapper {
+  height: 250px; /* Fixed height for the gallery container */
+  overflow: hidden;
+  /* `ng-gallery` should handle its internal layout, no need for flex here */
+}
+
+/* Ensure the ng-gallery component itself takes up the full space of its wrapper */
+.gallery-wrapper gallery {
+  width: 100%;
+  height: 100%;
+  display: block; /* Essential: makes the custom component behave like a block element */
+}
+
+/* Target images specifically within the ng-gallery component to control their fit and size */
+/* `ng-gallery` usually uses classes like `.g-image` for main images and `.g-thumb` for thumbnails.
+   We'll target them directly and add a general `img` rule as a fallback. */
+.gallery-wrapper gallery .g-image,
+.gallery-wrapper gallery .g-thumb,
+.gallery-wrapper gallery img {
+  /* Fallback for any other img tags */
+  width: 100% !important; /* Force fill the width */
+  height: 100% !important; /* Force fill the height */
+  object-fit: cover !important; /* IMPORTANT FIX: Fill the space, cropping if aspect ratio doesn't match */
+  display: block; /* Removes any browser-default inline spacing */
+}
+
+/* Responsive Adjustments using Media Queries */
+@media (min-width: 768px) {
+  /* Medium and larger screens */
+  .profile-header {
+    flex-direction: row; /* Align side-by-side */
+    justify-content: center; /* Center the profile photo and info block horizontally within the card */
+    align-items: center; /* Center vertically within the row */
+  }
+
+  .profile-photo-wrapper {
+    margin-top: 0;
+    margin-right: 30px; /* Space between photo and info */
+    margin-bottom: 0;
+  }
+
+  .profile-photo {
+    width: 180px;
+    height: 180px;
+  }
+
+  .profile-info {
+    text-align: left; /* Reset text alignment for larger screens */
+    flex-grow: 1; /* Allow info to take remaining space if needed */
+  }
+
+  .profile-name {
+    font-size: 2.75rem;
+  }
+
+  .profile-meta span {
+    display: inline-block;
+  }
+
+  .profile-section-card {
+    height: 100%; /* Ensure cards in columns have equal height */
+  }
+
+  .about-content,
+  .gallery-wrapper {
+    max-height: unset; /* Remove max-height constraint on larger screens if content can expand */
+    height: 250px; /* Maintain consistent height */
+  }
+}
+
+@media (min-width: 992px) {
+  /* Large screens */
+  .profile-banner {
+    height: 300px;
+  }
+  .main-card {
+    padding: 3rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  /* Extra small screens (mobile portrait) */
+  .profile-banner {
+    height: 180px;
+  }
+
+  .profile-content-wrapper {
+    margin-top: -90px;
+    padding: 0 10px;
+  }
+
+  .profile-photo-wrapper {
+    margin-top: -70px;
+  }
+
+  .profile-photo {
+    width: 120px;
+    height: 120px;
+    border-width: 5px;
+  }
+
+  .main-card {
+    padding: 1.5rem;
+  }
+
+  .profile-name {
+    font-size: 1.75rem;
+  }
+
+  .profile-meta {
+    font-size: 0.85rem;
+  }
+
+  .btn-main {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .profile-section-card {
+    padding: 1.5rem;
+  }
+
+  .about-content {
+    max-height: 120px;
+  }
+  .gallery-wrapper {
+    height: 200px;
+  }
+}

@@ -1,90 +1,121 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { AuthGuard } from '../_guards/auth.guard';
+import { AuthGuard } from '../_guards/auth.guard'; // Assuming AuthGuard is still needed
 import { MemberService } from '../_services/member.service';
-import { Member } from '../_models/member';
-import { PhotoDTO } from '../_models/member';
+import { Member, PhotoDTO } from '../_models/member';
 import { AccountService } from '../_services/account.service';
 import { GalleryModule, GalleryItem, ImageItem } from 'ng-gallery';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [CommonModule, RouterModule, GalleryModule],
   template: `
-    <div
-      class="profile-banner"
-      style="width: 100vw; height: 260px; background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1100&q=80') center/cover; margin-left: calc(-50vw + 50%);"
-    ></div>
-    <div class="container" style="margin-top: -120px;">
-      <div
-        class="profile-card main-card p-4 mx-auto"
-        style="max-width: 1100px; width: 90vw;"
-      >
-        <div class="d-flex flex-column align-items-center">
-          <img
-            [src]="
-              user.photoUrl || 'https://randomuser.me/api/portraits/lego/1.jpg'
-            "
-            class="profile-photo mb-3 shadow"
-            alt="Profile Photo"
-            style="width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 6px solid #fff; margin-top: -90px;"
-          />
-          <h2 class="mt-3 mb-1 fw-bold" style="color: #764ba2;">
-            {{ user.knownAs || user.userName }}
-          </h2>
-          <div class="profile-meta text-center mb-2">
-            <span *ngIf="user.city"
-              ><i class="fas fa-map-marker-alt me-1"></i>{{ user.city }}</span
-            >
-            <span *ngIf="user.age" class="ms-3"
-              ><i class="fas fa-birthday-cake me-1"></i>{{ user.age }} yrs</span
-            >
-            <span *ngIf="user.gender" class="ms-3"
-              ><i class="fas fa-venus-mars me-1"></i>{{ user.gender }}</span
-            >
-          </div>
-          <button class="btn btn-main mb-3" (click)="editProfile()">
-            <i class="fas fa-edit me-2"></i>Edit Profile
-          </button>
-        </div>
-        <div
-          class="d-flex flex-row gap-4 flex-wrap mt-4 justify-content-center"
-        >
-          <div
-            class="profile-card-section flex-fill"
-            style="min-width: 300px; background: #f8f9fa; border-radius: 16px; box-shadow: 0 2px 8px rgba(102,126,234,0.08); padding: 1.5rem; margin-bottom: 1.5rem;"
-          >
-            <h4 class="fw-bold mb-2" style="color: #764ba2;">
-              <i class="fas fa-info-circle me-2"></i>About
-            </h4>
-            <div style="overflow:auto; max-height: 180px;">
-              <p class="mb-0">
-                {{ user.introduction || 'No introduction provided.' }}
-              </p>
+    <div class="profile-container">
+      <div class="profile-banner">
+        <img
+          src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80"
+          alt="Profile Banner"
+          class="img-fluid profile-banner-img"
+        />
+      </div>
+
+      <div class="profile-content-wrapper">
+        <div class="profile-card main-card shadow-sm mx-auto">
+          <div class="profile-header">
+            <div class="profile-photo-wrapper">
+              <img
+                [src]="
+                  user.photoUrl ||
+                  'https://randomuser.me/api/portraits/lego/1.jpg'
+                "
+                alt="Profile Photo"
+                class="profile-photo shadow"
+              />
+            </div>
+
+            <div class="profile-info text-center text-md-start">
+              <h2 class="display-6 fw-bold mb-1 profile-name">
+                {{ user.knownAs || user.userName }}
+              </h2>
+              <div class="profile-meta mb-3">
+                <span
+                  *ngIf="user.city"
+                  class="d-block d-md-inline-block me-md-3"
+                >
+                  <i class="fas fa-map-marker-alt me-1"></i>{{ user.city }}
+                </span>
+                <span
+                  *ngIf="user.age"
+                  class="d-block d-md-inline-block me-md-3"
+                >
+                  <i class="fas fa-birthday-cake me-1"></i>{{ user.age }} yrs
+                </span>
+                <span *ngIf="user.gender" class="d-block d-md-inline-block">
+                  <i class="fas fa-venus-mars me-1"></i>{{ user.gender }}
+                </span>
+              </div>
+              <div
+                class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2 mb-3"
+              >
+                <button class="btn btn-main btn-sm" (click)="editProfile()">
+                  <i class="fas fa-edit me-1"></i>Edit Profile
+                </button>
+                <label class="btn btn-main btn-sm mb-0">
+                  <i class="fas fa-plus me-1"></i>Post Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onGalleryPhotoSelected($event)"
+                    hidden
+                  />
+                </label>
+              </div>
             </div>
           </div>
-          <div
-            class="profile-card-section flex-fill"
-            style="min-width: 300px; background: #f8f9fa; border-radius: 16px; box-shadow: 0 2px 8px rgba(102,126,234,0.08); padding: 1.5rem; margin-bottom: 1.5rem;"
-          >
-            <h5 class="fw-bold mb-2" style="color: #764ba2;">
-              <i class="fas fa-images me-2"></i>Photo Gallery
-            </h5>
-            <div class="gallery-wrapper">
-              <gallery
-                [items]="galleryImages"
-                [thumbPosition]="'bottom'"
-                [nav]="true"
-              ></gallery>
+
+          <hr class="my-4" />
+
+          <div class="row g-4">
+            <div class="col-12 col-lg-6">
+              <div class="profile-section-card h-100 p-4">
+                <h4 class="fw-bold mb-3 section-title">
+                  <i class="fas fa-info-circle me-2"></i>About Me
+                </h4>
+                <div class="about-content">
+                  <p
+                    class="mb-0 text-break"
+                    [innerHTML]="
+                      user.introduction || 'No introduction provided yet.'
+                    "
+                  ></p>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="profile-section-card h-100 p-4">
+                <h4 class="fw-bold mb-3 section-title">
+                  <i class="fas fa-images me-2"></i>Photo Gallery
+                </h4>
+                <div class="gallery-wrapper">
+                  <gallery
+                    [items]="galleryImages"
+                    [thumbPosition]="'bottom'"
+                    [nav]="true"
+                    [autoplay]="true"
+                  ></gallery>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   `,
-  styleUrls: ['../Members/member-detail/member-detail.css'],
+  styleUrls: ['./profile.component.css'],
 })
 export class ProfileComponent implements OnInit {
   user: Member = {
@@ -92,22 +123,23 @@ export class ProfileComponent implements OnInit {
     dateOfBirth: new Date(),
     created: new Date(),
     lastActive: new Date(),
-    userName: 'User',
-    knownAs: 'User',
+    userName: 'GuestUser',
+    knownAs: 'Guest',
     photoUrl: '',
-    city: 'City',
+    city: 'Cairo',
     age: 25,
-    gender: 'M',
-    introduction: 'This is my about section.',
+    gender: 'Female',
+    introduction:
+      'This is a **sample introduction** text to demonstrate how the "About Me" section looks with more content. I am a passionate individual currently exploring new horizons in software development. I enjoy learning and building new things, and constantly striving to improve my skills. <br><br>My interests include **backend development with ASP.NET**, database design, and cloud technologies. I am always open to new challenges and collaborations. Feel free to connect!',
     photos: [
       {
         id: 1,
-        url: 'https://randomuser.me/api/portraits/men/1.jpg',
+        url: 'https://randomuser.me/api/portraits/women/1.jpg',
         isMain: true,
       },
       {
         id: 2,
-        url: 'https://randomuser.me/api/portraits/men/2.jpg',
+        url: 'https://randomuser.me/api/portraits/women/2.jpg',
         isMain: false,
       },
     ],
@@ -118,7 +150,8 @@ export class ProfileComponent implements OnInit {
   constructor(
     private router: Router,
     private memberService: MemberService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
@@ -130,9 +163,12 @@ export class ProfileComponent implements OnInit {
           this.initGallery();
         },
         error: (err) => {
-          console.log(err);
+          console.error('Error fetching member data:', err);
         },
       });
+    } else {
+      console.warn('No logged-in user found. Displaying default profile data.');
+      this.initGallery();
     }
   }
 
@@ -144,5 +180,43 @@ export class ProfileComponent implements OnInit {
 
   editProfile() {
     this.router.navigate(['/edit-profile']);
+  }
+
+  onGalleryPhotoSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      this.http
+        .post<{ url: string }>(
+          environment.apiUrl + 'Users/upload-photo',
+          formData
+        )
+        .subscribe({
+          next: (res) => {
+            // Persist the photo in the backend gallery
+            this.http
+              .post(environment.apiUrl + 'Users/AddPhoto/' + this.user.id, {
+                url: res.url,
+              })
+              .subscribe({
+                next: () => {
+                  // Reload user data to refresh gallery
+                  this.memberService
+                    .getMemberByUsername(this.user.userName!)
+                    .subscribe({
+                      next: (member) => {
+                        this.user = member;
+                        this.initGallery();
+                      },
+                    });
+                },
+              });
+          },
+          error: () => {
+            // Optionally show error message
+          },
+        });
+    }
   }
 }

@@ -13,8 +13,11 @@ import { ToastrService } from 'ngx-toastr';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="profile-page-container">
-      <div class="profile-card main-card p-4">
+    <div class="profile-page-container container-fluid">
+      <div
+        class="profile-card main-card p-4 mx-auto"
+        style="max-width: 900px; width: 100%;"
+      >
         <h2
           class="text-center mb-4"
           style="color: #764ba2; letter-spacing: 1px;"
@@ -29,7 +32,7 @@ import { ToastrService } from 'ngx-toastr';
         >
           <div class="row g-4">
             <div
-              class="col-md-4 d-flex flex-column align-items-center justify-content-start"
+              class="col-12 col-md-4 d-flex flex-column align-items-center justify-content-start"
             >
               <img
                 [src]="
@@ -57,7 +60,7 @@ import { ToastrService } from 'ngx-toastr';
                 />
               </div>
             </div>
-            <div class="col-md-8">
+            <div class="col-12 col-md-8">
               <div class="mb-3">
                 <label class="form-label fw-bold"
                   ><i class="fas fa-user me-1"></i>Known As</label
@@ -83,7 +86,7 @@ import { ToastrService } from 'ngx-toastr';
                 ></textarea>
               </div>
               <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-12 col-md-6 mb-3">
                   <label class="form-label fw-bold"
                     ><i class="fas fa-heart me-1"></i>Interests</label
                   >
@@ -94,7 +97,7 @@ import { ToastrService } from 'ngx-toastr';
                     placeholder="Your interests"
                   />
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-12 col-md-6 mb-3">
                   <label class="form-label fw-bold"
                     ><i class="fas fa-search me-1"></i>Looking For</label
                   >
@@ -107,7 +110,7 @@ import { ToastrService } from 'ngx-toastr';
                 </div>
               </div>
               <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-12 col-md-6 mb-3">
                   <label class="form-label fw-bold"
                     ><i class="fas fa-map-marker-alt me-1"></i>City</label
                   >
@@ -118,7 +121,7 @@ import { ToastrService } from 'ngx-toastr';
                     placeholder="City"
                   />
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-12 col-md-6 mb-3">
                   <label class="form-label fw-bold"
                     ><i class="fas fa-flag me-1"></i>Country</label
                   >
@@ -132,7 +135,7 @@ import { ToastrService } from 'ngx-toastr';
               </div>
               <div class="d-flex justify-content-end mt-4">
                 <button
-                  class="btn btn-main px-4 py-2"
+                  class="btn btn-main px-4 py-2 w-100 w-md-auto"
                   type="submit"
                   style="font-weight: 600; font-size: 1.1rem;"
                 >
