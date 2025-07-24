@@ -23,4 +23,17 @@ export class MemberService {
       this.baseUrl + '/GetUserByUsername/' + username
     );
   }
+
+  updateMember(id: number, member: Member): Observable<Member> {
+    return this.http.put<Member>(this.baseUrl + '/UpdateUser/' + id, member);
+  }
+
+  uploadPhoto(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(
+      this.baseUrl + '/upload-photo',
+      formData
+    );
+  }
 }

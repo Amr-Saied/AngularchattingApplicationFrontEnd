@@ -5,48 +5,83 @@
     </div>
   </div>
   <div *ngIf="!loading && member" class="profile-card main-card">
-    <div class="profile-photo-row">
-      <img
-        [src]="
-          member.photoUrl || 'https://randomuser.me/api/portraits/lego/1.jpg'
-        "
-        class="profile-photo"
-        alt="{{ member.userName }}'s photo"
-      />
-    </div>
-    <div class="profile-info">
-      <h1 class="profile-name">{{ member.knownAs || member.userName }}</h1>
-      <div class="profile-meta">
-        <span *ngIf="member.city"
-          ><i class="fas fa-map-marker-alt me-1"></i>{{ member.city }}</span
-        >
-        <span *ngIf="member.age" class="ms-3"
-          ><i class="fas fa-birthday-cake me-1"></i>{{ member.age }} yrs</span
-        >
-        <span *ngIf="member.gender" class="ms-3"
-          ><i class="fas fa-venus-mars me-1"></i>{{ member.gender }}</span
-        >
-      </div>
-      <div class="profile-section" *ngIf="member.introduction">
-        <h4>About</h4>
-        <p>{{ member.introduction }}</p>
-      </div>
-      <div class="profile-section" *ngIf="member.interests">
-        <h4>Interests</h4>
-        <p>{{ member.interests }}</p>
-      </div>
-      <div class="profile-section" *ngIf="member.lookingFor">
-        <h4>Looking For</h4>
-        <p>{{ member.lookingFor }}</p>
-      </div>
-    </div>
-    <div class="profile-actions">
-      <button class="btn btn-outline-secondary btn-lg" title="Like">
-        <i class="far fa-heart"></i>
+    <!-- Tabs Bar -->
+    <div class="profile-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'about'"
+        (click)="setTab('about')"
+      >
+        <i class="fas fa-user me-1"></i> About
       </button>
-      <button class="btn btn-outline-secondary btn-lg" title="Message">
-        <i class="far fa-envelope"></i>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'gallery'"
+        (click)="setTab('gallery')"
+      >
+        <i class="fas fa-images me-1"></i> Gallery
       </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content mt-3">
+      <div *ngIf="activeTab === 'gallery'">
+        <div class="gallery-wrapper">
+          <gallery
+            #galleryComp
+            [items]="galleryImages"
+            [thumbPosition]="'bottom'"
+            [nav]="true"
+          ></gallery>
+        </div>
+      </div>
+      <div *ngIf="activeTab === 'about'">
+        <div class="profile-photo-row">
+          <img
+            [src]="
+              member.photoUrl ||
+              'https://randomuser.me/api/portraits/lego/1.jpg'
+            "
+            class="profile-photo"
+            alt="{{ member.userName }}'s photo"
+          />
+        </div>
+        <div class="profile-info">
+          <h1 class="profile-name">{{ member.knownAs || member.userName }}</h1>
+          <div class="profile-meta">
+            <span *ngIf="member.city"
+              ><i class="fas fa-map-marker-alt me-1"></i>{{ member.city }}</span
+            >
+            <span *ngIf="member.age" class="ms-3"
+              ><i class="fas fa-birthday-cake me-1"></i
+              >{{ member.age }} yrs</span
+            >
+            <span *ngIf="member.gender" class="ms-3"
+              ><i class="fas fa-venus-mars me-1"></i>{{ member.gender }}</span
+            >
+          </div>
+          <div class="profile-section" *ngIf="member.introduction">
+            <h4>About</h4>
+            <p>{{ member.introduction }}</p>
+          </div>
+          <div class="profile-section" *ngIf="member.interests">
+            <h4>Interests</h4>
+            <p>{{ member.interests }}</p>
+          </div>
+          <div class="profile-section" *ngIf="member.lookingFor">
+            <h4>Looking For</h4>
+            <p>{{ member.lookingFor }}</p>
+          </div>
+        </div>
+        <div class="profile-actions">
+          <button class="btn btn-outline-secondary btn-lg" title="Like">
+            <i class="far fa-heart"></i>
+          </button>
+          <button class="btn btn-outline-secondary btn-lg" title="Message">
+            <i class="far fa-envelope"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

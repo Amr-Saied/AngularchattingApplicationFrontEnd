@@ -1,6 +1,11 @@
 /* Navigation Bar Styling */
 /* Only keep nav-specific layout or animation. Remove button, card, and form styles now in styles.css */
 
+/* Add this to remove rounded corners from the main navbar element */
+.navbar {
+  border-radius: 0;
+}
+
 .nav-link {
   font-weight: 500;
   transition: all 0.3s ease;

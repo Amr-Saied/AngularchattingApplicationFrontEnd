@@ -10,6 +10,8 @@ import { AdminGuard } from '../_guards/admin.guard';
 import { NotFoundComponent } from './not-found.component';
 import { ServerErrorComponent } from './server-error.component';
 import { BuggyComponenet } from '../buggy-componenet/buggy-componenet';
+import { ProfileComponent } from './profile.component';
+import { EditProfileComponent } from './edit-profile.component';
 
 export const routes: Routes = [
   {
@@ -58,6 +60,16 @@ export const routes: Routes = [
     path: 'buggy-test',
     component: BuggyComponenet,
     canActivate: [AdminGuard],
+  },
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'edit-profile',
+    component: EditProfileComponent,
+    canActivate: [AuthGuard],
   },
   {
     path: '**',
