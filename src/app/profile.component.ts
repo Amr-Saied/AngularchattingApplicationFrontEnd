@@ -1,19 +1,25 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { AuthGuard } from '../_guards/auth.guard'; // Assuming AuthGuard is still needed
+import { AuthGuard } from '../_guards/auth.guard';
 import { MemberService } from '../_services/member.service';
 import { Member, PhotoDTO } from '../_models/member';
 import { AccountService } from '../_services/account.service';
-import { GalleryModule, GalleryItem, ImageItem } from 'ng-gallery';
+import {
+  GalleryModule,
+  GalleryItem,
+  ImageItem,
+  GalleryComponent,
+} from 'ng-gallery';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { ToastrService } from 'ngx-toastr';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, GalleryModule],
+  imports: [CommonModule, RouterModule, GalleryModule, NgxSpinnerModule],
   template: `
     <div class="profile-container">
       <div class="profile-banner">
@@ -50,6 +56,12 @@ import { ToastrService } from 'ngx-toastr';
                   <i class="fas fa-map-marker-alt me-1"></i>{{ user.city }}
                 </span>
                 <span
+                  *ngIf="user.country"
+                  class="d-block d-md-inline-block me-md-3"
+                >
+                  <i class="fas fa-flag me-1"></i>{{ user.country }}
+                </span>
+                <span
                   *ngIf="user.age"
                   class="d-block d-md-inline-block me-md-3"
                 >
@@ -65,27 +77,71 @@ import { ToastrService } from 'ngx-toastr';
                 <button class="btn btn-main btn-sm" (click)="editProfile()">
                   <i class="fas fa-edit me-1"></i>Edit Profile
                 </button>
-                <label class="btn btn-main btn-sm mb-0">
-                  <i class="fas fa-plus me-1"></i>Post Photo
-                  <input
-                    type="file"
-                    accept="image/*"
-                    (change)="onGalleryPhotoSelected($event)"
-                    hidden
-                  />
-                </label>
               </div>
             </div>
           </div>
 
           <hr class="my-4" />
 
-          <div class="row g-4">
-            <div class="col-12 col-lg-6">
-              <div class="profile-section-card h-100 p-4">
-                <h4 class="fw-bold mb-3 section-title">
-                  <i class="fas fa-info-circle me-2"></i>About Me
-                </h4>
+          <!-- Tab Navigation -->
+          <ul class="nav nav-tabs profile-tabs" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link profile-tab-btn"
+                [class.active]="activeTab === 'about'"
+                (click)="setTab('about')"
+                type="button"
+                role="tab"
+              >
+                <i class="fas fa-info-circle me-2"></i>About
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link profile-tab-btn"
+                [class.active]="activeTab === 'interests'"
+                (click)="setTab('interests')"
+                type="button"
+                role="tab"
+              >
+                <i class="fas fa-heart me-2"></i>Interests
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link profile-tab-btn"
+                [class.active]="activeTab === 'looking-for'"
+                (click)="setTab('looking-for')"
+                type="button"
+                role="tab"
+              >
+                <i class="fas fa-search me-2"></i>Looking For
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link profile-tab-btn"
+                [class.active]="activeTab === 'gallery'"
+                (click)="setTab('gallery')"
+                type="button"
+                role="tab"
+              >
+                <i class="fas fa-images me-2"></i>Gallery
+              </button>
+            </li>
+          </ul>
+
+          <!-- Tab Content -->
+          <div class="tab-content" id="profileTabContent">
+            <!-- About Tab -->
+            <div
+              class="tab-pane fade"
+              [class.show]="activeTab === 'about'"
+              [class.active]="activeTab === 'about'"
+              role="tabpanel"
+            >
+              <div class="p-4">
+                <h4 class="fw-bold mb-3">About Me</h4>
                 <div class="about-content">
                   <p
                     class="mb-0 text-break"
@@ -96,25 +152,83 @@ import { ToastrService } from 'ngx-toastr';
                 </div>
               </div>
             </div>
-            <div class="col-12 col-lg-6">
-              <div class="profile-section-card h-100 p-4">
-                <h4 class="fw-bold mb-3 section-title">
-                  <i class="fas fa-images me-2"></i>Photo Gallery
-                </h4>
-                <button
-                  class="btn btn-main btn-sm btn-edit-gallery edit-gallery-abs-btn"
-                  (click)="toggleEditGallery()"
+
+            <!-- Interests Tab -->
+            <div
+              class="tab-pane fade"
+              [class.show]="activeTab === 'interests'"
+              [class.active]="activeTab === 'interests'"
+              role="tabpanel"
+            >
+              <div class="p-4">
+                <h4 class="fw-bold mb-3">Interests</h4>
+                <div class="interests-content">
+                  <p class="mb-0 text-break">
+                    {{ user.interests || 'No interests listed yet.' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Looking For Tab -->
+            <div
+              class="tab-pane fade"
+              [class.show]="activeTab === 'looking-for'"
+              [class.active]="activeTab === 'looking-for'"
+              role="tabpanel"
+            >
+              <div class="p-4">
+                <h4 class="fw-bold mb-3">Looking For</h4>
+                <div class="looking-for-content">
+                  <p class="mb-0 text-break">
+                    {{ user.lookingFor || 'No preferences listed yet.' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gallery Tab -->
+            <div
+              class="tab-pane fade"
+              [class.show]="activeTab === 'gallery'"
+              [class.active]="activeTab === 'gallery'"
+              role="tabpanel"
+            >
+              <div class="p-4">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3"
                 >
-                  Delete Photo
-                </button>
+                  <h4 class="fw-bold mb-0">Photo Gallery</h4>
+                  <div class="d-flex gap-2">
+                    <label class="btn btn-main btn-sm">
+                      <i class="fas fa-plus me-1"></i>Add Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        (change)="onGalleryPhotoSelected($event)"
+                        hidden
+                      />
+                    </label>
+                    <button
+                      class="btn btn-outline-danger btn-sm"
+                      (click)="toggleEditGallery()"
+                    >
+                      <i class="fas fa-trash me-1"></i
+                      >{{ editGalleryMode ? 'Done' : 'Delete' }}
+                    </button>
+                  </div>
+                </div>
+
                 <div class="gallery-wrapper" *ngIf="!editGalleryMode">
                   <gallery
+                    #galleryComp
                     [items]="galleryImages"
                     [thumbPosition]="'bottom'"
                     [nav]="true"
                     [autoplay]="true"
                   ></gallery>
                 </div>
+
                 <div class="gallery-wrapper edit-mode" *ngIf="editGalleryMode">
                   <div class="row g-2">
                     <div
@@ -136,12 +250,6 @@ import { ToastrService } from 'ngx-toastr';
                       </div>
                     </div>
                   </div>
-                  <button
-                    class="btn btn-secondary mt-3"
-                    (click)="toggleEditGallery()"
-                  >
-                    Done
-                  </button>
                 </div>
               </div>
             </div>
@@ -166,6 +274,10 @@ export class ProfileComponent implements OnInit {
     gender: 'Female',
     introduction:
       'This is a **sample introduction** text to demonstrate how the "About Me" section looks with more content. I am a passionate individual currently exploring new horizons in software development. I enjoy learning and building new things, and constantly striving to improve my skills. <br><br>My interests include **backend development with ASP.NET**, database design, and cloud technologies. I am always open to new challenges and collaborations. Feel free to connect!',
+    interests:
+      'Software development, reading, traveling, photography, cooking, hiking, music, movies, technology, learning new skills',
+    lookingFor:
+      'Friendship, meaningful conversations, professional networking, travel companions, people to share interests with',
     photos: [
       {
         id: 1,
@@ -182,6 +294,8 @@ export class ProfileComponent implements OnInit {
 
   galleryImages: GalleryItem[] = [];
   editGalleryMode = false;
+  activeTab: string = 'about';
+  @ViewChild(GalleryComponent) galleryComp?: GalleryComponent;
 
   constructor(
     private router: Router,
@@ -207,6 +321,18 @@ export class ProfileComponent implements OnInit {
     } else {
       console.warn('No logged-in user found. Displaying default profile data.');
       this.initGallery();
+    }
+  }
+
+  setTab(tab: string) {
+    this.activeTab = tab;
+    if (tab === 'gallery' && this.galleryComp) {
+      // Force gallery to update its size/layout
+      setTimeout(() => {
+        if (this.galleryComp && (this.galleryComp as any).updateLayout) {
+          (this.galleryComp as any).updateLayout();
+        }
+      }, 50);
     }
   }
 
@@ -252,7 +378,6 @@ export class ProfileComponent implements OnInit {
               });
           },
           error: () => {
-            // Optionally show error message
             this.toastr.error('Failed to upload photo.');
             console.log('Failed to upload photo.');
           },
@@ -271,9 +396,9 @@ export class ProfileComponent implements OnInit {
         // Remove photo from local user object
         this.user.photos = this.user.photos?.filter((p) => p.id !== photoId);
         this.initGallery();
+        this.toastr.success('Photo deleted successfully.');
       },
       error: (err) => {
-        // Optionally show error message
         console.error('Failed to delete photo:', err);
         this.toastr.error('Failed to delete photo.');
       },

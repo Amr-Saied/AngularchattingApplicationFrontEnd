@@ -11,7 +11,7 @@
         </div>
 
         <div class="card-body p-4">
-          <form #registerForm="ngForm" (ngSubmit)="register()">
+          <form [formGroup]="registerForm" (ngSubmit)="register()">
             <div class="mb-3">
               <label for="username" class="form-label">
                 <i class="fas fa-user me-1 text-primary"></i>
@@ -26,30 +26,13 @@
                   class="form-control"
                   id="username"
                   placeholder="Enter your username"
-                  name="Username"
-                  [(ngModel)]="model.Username"
-                  required
-                  minlength="3"
-                  #username="ngModel"
+                  formControlName="username"
                 />
               </div>
-              <div
-                class="form-text"
-                *ngIf="username.invalid && username.touched"
-              >
-                <small
-                  class="text-danger"
-                  *ngIf="username.errors?.['required']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Username is
-                  required
-                </small>
-                <small
-                  class="text-danger"
-                  *ngIf="username.errors?.['minlength']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Username must be
-                  at least 3 characters
+              <div class="form-text" *ngIf="getFieldError('username')">
+                <small class="text-danger">
+                  <i class="fas fa-exclamation-circle me-1"></i
+                  >{{ getFieldError("username") }}
                 </small>
               </div>
             </div>
@@ -68,37 +51,58 @@
                   class="form-control"
                   id="password"
                   placeholder="Enter your password"
-                  name="Password"
-                  [(ngModel)]="model.Password"
-                  required
-                  minlength="6"
-                  #password="ngModel"
+                  formControlName="password"
                 />
                 <button
                   class="btn btn-outline-secondary"
                   type="button"
-                  (click)="togglePasswordVisibility()"
+                  (click)="togglePasswordVisibility('password')"
                 >
                   <i class="fas fa-eye" id="passwordToggle"></i>
                 </button>
               </div>
-              <div
-                class="form-text"
-                *ngIf="password.invalid && password.touched"
-              >
-                <small
-                  class="text-danger"
-                  *ngIf="password.errors?.['required']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Password is
-                  required
+              <div class="form-text" *ngIf="getFieldError('password')">
+                <small class="text-danger">
+                  <i class="fas fa-exclamation-circle me-1"></i
+                  >{{ getFieldError("password") }}
                 </small>
-                <small
-                  class="text-danger"
-                  *ngIf="password.errors?.['minlength']"
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">
+                <i class="fas fa-lock me-1 text-primary"></i>
+                Confirm Password
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">
+                  <i class="fas fa-lock text-muted"></i>
+                </span>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="confirmPassword"
+                  placeholder="Confirm your password"
+                  formControlName="confirmPassword"
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  (click)="togglePasswordVisibility('confirmPassword')"
                 >
-                  <i class="fas fa-exclamation-circle me-1"></i>Password must be
-                  at least 6 characters
+                  <i class="fas fa-eye" id="confirmPasswordToggle"></i>
+                </button>
+              </div>
+              <div class="form-text" *ngIf="getFieldError('confirmPassword')">
+                <small class="text-danger">
+                  <i class="fas fa-exclamation-circle me-1"></i
+                  >{{ getFieldError("confirmPassword") }}
+                </small>
+              </div>
+              <div class="form-text" *ngIf="getPasswordMatchError()">
+                <small class="text-danger">
+                  <i class="fas fa-exclamation-circle me-1"></i
+                  >{{ getPasswordMatchError() }}
                 </small>
               </div>
             </div>

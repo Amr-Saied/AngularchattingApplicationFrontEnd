@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MemberService } from '../_services/member.service';
 import { AccountService } from '../_services/account.service';
 import { Member } from '../_models/member';
@@ -11,7 +16,7 @@ import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="profile-page-container container-fluid">
       <div
@@ -26,8 +31,8 @@ import { ToastrService } from 'ngx-toastr';
         </h2>
         <form
           *ngIf="member"
+          [formGroup]="editForm"
           (ngSubmit)="onSubmit()"
-          #editForm="ngForm"
           autocomplete="off"
         >
           <div class="row g-4">
@@ -60,9 +65,7 @@ import { ToastrService } from 'ngx-toastr';
                 >
                 <input
                   class="form-control"
-                  [(ngModel)]="member.knownAs"
-                  name="knownAs"
-                  required
+                  formControlName="knownAs"
                   placeholder="Display name"
                 />
               </div>
@@ -72,8 +75,7 @@ import { ToastrService } from 'ngx-toastr';
                 >
                 <textarea
                   class="form-control"
-                  [(ngModel)]="member.introduction"
-                  name="introduction"
+                  formControlName="introduction"
                   rows="3"
                   placeholder="Tell us about yourself..."
                 ></textarea>
@@ -85,8 +87,7 @@ import { ToastrService } from 'ngx-toastr';
                   >
                   <input
                     class="form-control"
-                    [(ngModel)]="member.interests"
-                    name="interests"
+                    formControlName="interests"
                     placeholder="Your interests"
                   />
                 </div>
@@ -96,8 +97,7 @@ import { ToastrService } from 'ngx-toastr';
                   >
                   <input
                     class="form-control"
-                    [(ngModel)]="member.lookingFor"
-                    name="lookingFor"
+                    formControlName="lookingFor"
                     placeholder="What are you looking for?"
                   />
                 </div>
@@ -109,8 +109,7 @@ import { ToastrService } from 'ngx-toastr';
                   >
                   <input
                     class="form-control"
-                    [(ngModel)]="member.city"
-                    name="city"
+                    formControlName="city"
                     placeholder="City"
                   />
                 </div>
@@ -120,8 +119,7 @@ import { ToastrService } from 'ngx-toastr';
                   >
                   <input
                     class="form-control"
-                    [(ngModel)]="member.country"
-                    name="country"
+                    formControlName="country"
                     placeholder="Country"
                   />
                 </div>
@@ -130,6 +128,7 @@ import { ToastrService } from 'ngx-toastr';
                 <button
                   class="btn btn-main px-4 py-2 w-100 w-md-auto"
                   type="submit"
+                  [disabled]="editForm.invalid || !hasFormChanges()"
                   style="font-weight: 600; font-size: 1.1rem;"
                 >
                   <i class="fas fa-save me-2"></i>Save Changes
@@ -152,15 +151,27 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class EditProfileComponent implements OnInit {
   member: Member | null = null;
+  editForm: FormGroup;
   successMsg = '';
   errorMsg = '';
+  originalFormValues: any = {};
 
   constructor(
     private memberService: MemberService,
     private accountService: AccountService,
     private http: HttpClient,
-    private toastr: ToastrService
-  ) {}
+    private toastr: ToastrService,
+    private fb: FormBuilder
+  ) {
+    this.editForm = this.fb.group({
+      knownAs: ['', [Validators.required]],
+      introduction: [''],
+      interests: [''],
+      lookingFor: [''],
+      city: [''],
+      country: [''],
+    });
+  }
 
   originalMember: Member | null = null;
 
@@ -171,6 +182,7 @@ export class EditProfileComponent implements OnInit {
         next: (member) => {
           this.member = { ...member };
           this.originalMember = { ...member };
+          this.updateFormValues();
         },
         error: () => this.toastr.error('Failed to load profile.'),
       });
@@ -180,17 +192,52 @@ export class EditProfileComponent implements OnInit {
     }
   }
 
+  updateFormValues() {
+    if (this.member) {
+      const formValues = {
+        knownAs: this.member.knownAs || '',
+        introduction: this.member.introduction || '',
+        interests: this.member.interests || '',
+        lookingFor: this.member.lookingFor || '',
+        city: this.member.city || '',
+        country: this.member.country || '',
+      };
+
+      this.editForm.patchValue(formValues);
+      this.originalFormValues = { ...formValues };
+    }
+  }
+
+  hasFormChanges(): boolean {
+    if (!this.editForm) return false;
+
+    const currentValues = this.editForm.value;
+    return (
+      JSON.stringify(currentValues) !== JSON.stringify(this.originalFormValues)
+    );
+  }
+
   hasChanges(): boolean {
     if (!this.member || !this.originalMember) return false;
     return JSON.stringify(this.member) !== JSON.stringify(this.originalMember);
   }
 
   onSubmit() {
-    if (!this.member) return;
+    if (!this.member || this.editForm.invalid) return;
+
+    // Update member object with form values
+    this.member.knownAs = this.editForm.get('knownAs')?.value;
+    this.member.introduction = this.editForm.get('introduction')?.value;
+    this.member.interests = this.editForm.get('interests')?.value;
+    this.member.lookingFor = this.editForm.get('lookingFor')?.value;
+    this.member.city = this.editForm.get('city')?.value;
+    this.member.country = this.editForm.get('country')?.value;
+
     if (!this.hasChanges()) {
       this.toastr.info("You didn't change anything to update.");
       return;
     }
+
     this.successMsg = '';
     this.errorMsg = '';
     this.memberService.updateMember(this.member.id, this.member).subscribe({
@@ -198,6 +245,7 @@ export class EditProfileComponent implements OnInit {
         this.successMsg = 'Profile updated successfully!';
         this.member = updated;
         this.originalMember = { ...updated };
+        this.updateFormValues();
       },
       error: () => {
         this.toastr.error('Failed to update profile.');

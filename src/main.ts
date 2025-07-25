@@ -5,7 +5,7 @@ import { App } from './app/app';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { routes } from './app/app.routes';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
 import 'zone.js';
@@ -32,7 +32,7 @@ bootstrapApplication(App, {
       positionClass: 'toast-bottom-right',
       preventDuplicates: true,
     }),
-    importProvidersFrom(FormsModule),
+    importProvidersFrom(ReactiveFormsModule),
     importProvidersFrom(NgxSpinnerModule),
     importProvidersFrom(BrowserAnimationsModule),
   ],

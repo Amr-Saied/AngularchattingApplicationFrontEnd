@@ -46,6 +46,9 @@
             <span *ngIf="member.city"
               ><i class="fas fa-map-marker-alt me-1"></i>{{ member.city }}</span
             >
+            <span *ngIf="member.country" class="ms-3"
+              ><i class="fas fa-flag me-1"></i>{{ member.country }}</span
+            >
             <span *ngIf="member.age" class="ms-3"
               ><i class="fas fa-birthday-cake me-1"></i
               >{{ member.age }} yrs</span

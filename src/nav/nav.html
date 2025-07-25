@@ -38,7 +38,7 @@
 
       <!-- Enhanced Login Form -->
       <form
-        #loginForm="ngForm"
+        [formGroup]="loginForm"
         class="d-flex align-items-center"
         role="Login"
         (ngSubmit)="login()"
@@ -53,8 +53,7 @@
             type="text"
             placeholder="Username"
             aria-label="Username"
-            [(ngModel)]="model.Username"
-            name="Username"
+            formControlName="username"
             required
           />
         </div>
@@ -68,13 +67,16 @@
             type="password"
             placeholder="Password"
             aria-label="Password"
-            [(ngModel)]="model.Password"
-            name="Password"
+            formControlName="password"
             required
           />
         </div>
 
-        <button class="btn btn-success px-4" type="submit">
+        <button
+          class="btn btn-success px-4"
+          type="submit"
+          [disabled]="loginForm.invalid"
+        >
           <i class="fas fa-sign-in-alt me-1"></i>
           Login
         </button>
@@ -89,7 +91,7 @@
           aria-expanded="false"
         >
           <i class="fas fa-user-circle me-1"></i>
-          Welcome {{ model.Username }}
+          Welcome {{ getLoggedUsername() }}
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
           <li>
