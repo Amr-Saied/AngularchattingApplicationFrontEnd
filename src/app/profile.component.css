@@ -106,6 +106,14 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Add a custom class for the Edit Gallery button */
+.btn-edit-gallery {
+  font-size: 0.7rem;
+  padding: 0.3rem 0.7rem;
+  min-width: 75px;
+  margin-top: -20px; /* Move the button down a little */
+}
+
 /* Section Cards (About & Gallery) */
 .profile-section-card {
   background: #fdfdff;
@@ -277,4 +285,25 @@
   .gallery-wrapper {
     height: 200px;
   }
+}
+
+.gallery-wrapper.edit-mode {
+  max-height: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: auto;
+  padding-right: 8px;
+}
+
+/* Absolutely position the Edit Gallery button at the top-right of the gallery card */
+.edit-gallery-abs-btn {
+  position: absolute;
+  top: 60px;
+  right: 28px;
+  z-index: 10;
+}
+
+/* Make sure the parent is positioned relative for absolute positioning to work */
+.profile-section-card {
+  position: relative;
 }

@@ -51,13 +51,6 @@ import { ToastrService } from 'ngx-toastr';
                   (change)="onFileSelected($event)"
                   accept="image/*"
                 />
-                <label class="form-label fw-bold">Or Photo URL</label>
-                <input
-                  class="form-control"
-                  [(ngModel)]="member.photoUrl"
-                  name="photoUrl"
-                  placeholder="Paste image URL..."
-                />
               </div>
             </div>
             <div class="col-12 col-md-8">
@@ -179,10 +172,11 @@ export class EditProfileComponent implements OnInit {
           this.member = { ...member };
           this.originalMember = { ...member };
         },
-        error: () => (this.errorMsg = 'Failed to load profile.'),
+        error: () => this.toastr.error('Failed to load profile.'),
       });
     } else {
-      this.errorMsg = 'User not found.';
+      this.toastr.error('User not found.');
+      console.log('User not found.');
     }
   }
 
@@ -205,7 +199,10 @@ export class EditProfileComponent implements OnInit {
         this.member = updated;
         this.originalMember = { ...updated };
       },
-      error: () => (this.errorMsg = 'Failed to update profile.'),
+      error: () => {
+        this.toastr.error('Failed to update profile.');
+        console.log('Failed to update profile.');
+      },
     });
   }
 
@@ -216,9 +213,14 @@ export class EditProfileComponent implements OnInit {
         next: (res: { url: string }) => {
           if (this.member) {
             this.member.photoUrl = res.url;
+            // Save the new photo URL to the backend
+            this.memberService
+              .updateMember(this.member.id, this.member)
+              .subscribe();
           }
         },
         error: () => {
+          this.toastr.error('Error uploading photo');
           console.log('Error uploading photo');
         },
       });

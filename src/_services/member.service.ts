@@ -7,7 +7,6 @@ import { environment } from '../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class MemberService {
   private baseUrl = environment.apiUrl + 'Users';
-
   constructor(private http: HttpClient) {}
 
   getMembers(): Observable<Member[]> {
@@ -35,5 +34,9 @@ export class MemberService {
       this.baseUrl + '/upload-photo',
       formData
     );
+  }
+
+  deletePhoto(userId: number, photoId: number) {
+    return this.http.delete(this.baseUrl + `/DeletePhoto/${userId}/${photoId}`);
   }
 }

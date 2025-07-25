@@ -8,6 +8,7 @@ import { AccountService } from '../_services/account.service';
 import { GalleryModule, GalleryItem, ImageItem } from 'ng-gallery';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-profile',
@@ -100,13 +101,47 @@ import { environment } from '../environments/environment';
                 <h4 class="fw-bold mb-3 section-title">
                   <i class="fas fa-images me-2"></i>Photo Gallery
                 </h4>
-                <div class="gallery-wrapper">
+                <button
+                  class="btn btn-main btn-sm btn-edit-gallery edit-gallery-abs-btn"
+                  (click)="toggleEditGallery()"
+                >
+                  Delete Photo
+                </button>
+                <div class="gallery-wrapper" *ngIf="!editGalleryMode">
                   <gallery
                     [items]="galleryImages"
                     [thumbPosition]="'bottom'"
                     [nav]="true"
                     [autoplay]="true"
                   ></gallery>
+                </div>
+                <div class="gallery-wrapper edit-mode" *ngIf="editGalleryMode">
+                  <div class="row g-2">
+                    <div
+                      class="col-4 col-md-3"
+                      *ngFor="let photo of user.photos"
+                    >
+                      <div class="position-relative">
+                        <img
+                          [src]="photo.url"
+                          class="img-fluid rounded shadow"
+                          style="width:100%;height:120px;object-fit:cover;"
+                        />
+                        <button
+                          class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
+                          (click)="deletePhoto(photo.id)"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    class="btn btn-secondary mt-3"
+                    (click)="toggleEditGallery()"
+                  >
+                    Done
+                  </button>
                 </div>
               </div>
             </div>
@@ -146,12 +181,14 @@ export class ProfileComponent implements OnInit {
   };
 
   galleryImages: GalleryItem[] = [];
+  editGalleryMode = false;
 
   constructor(
     private router: Router,
     private memberService: MemberService,
     private accountService: AccountService,
-    private http: HttpClient
+    private http: HttpClient,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit() {
@@ -164,6 +201,7 @@ export class ProfileComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error fetching member data:', err);
+          this.toastr.error('Failed to load profile.');
         },
       });
     } else {
@@ -215,8 +253,30 @@ export class ProfileComponent implements OnInit {
           },
           error: () => {
             // Optionally show error message
+            this.toastr.error('Failed to upload photo.');
+            console.log('Failed to upload photo.');
           },
         });
     }
+  }
+
+  toggleEditGallery() {
+    this.editGalleryMode = !this.editGalleryMode;
+  }
+
+  deletePhoto(photoId: number) {
+    if (!this.user.id) return;
+    this.memberService.deletePhoto(this.user.id, photoId).subscribe({
+      next: () => {
+        // Remove photo from local user object
+        this.user.photos = this.user.photos?.filter((p) => p.id !== photoId);
+        this.initGallery();
+      },
+      error: (err) => {
+        // Optionally show error message
+        console.error('Failed to delete photo:', err);
+        this.toastr.error('Failed to delete photo.');
+      },
+    });
   }
 }
