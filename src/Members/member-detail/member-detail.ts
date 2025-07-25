@@ -9,11 +9,12 @@ import {
   ImageItem,
   GalleryComponent,
 } from 'ng-gallery';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @Component({
   selector: 'app-member-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, GalleryModule],
+  imports: [CommonModule, RouterModule, GalleryModule, NgxSpinnerModule],
   templateUrl: './member-detail.html',
   styleUrl: './member-detail.css',
 })

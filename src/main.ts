@@ -11,11 +11,19 @@ import { provideToastr } from 'ngx-toastr';
 import 'zone.js';
 import { tokenInterceptor } from './_interceptors/token-interceptor';
 import { errorHandlerInterceptor } from './_interceptors/error-handler-interceptor';
+import { loadingInterceptorInterceptor } from './_interceptors/loading-interceptor-interceptor';
+import { NgxSpinnerModule } from 'ngx-spinner';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 bootstrapApplication(App, {
   providers: [
     provideHttpClient(
-      withInterceptors([tokenInterceptor, errorHandlerInterceptor])
+      withInterceptors([
+        tokenInterceptor,
+        errorHandlerInterceptor,
+        loadingInterceptorInterceptor,
+      ])
     ),
     provideRouter(routes),
     provideAnimations(),
@@ -25,5 +33,7 @@ bootstrapApplication(App, {
       preventDuplicates: true,
     }),
     importProvidersFrom(FormsModule),
+    importProvidersFrom(NgxSpinnerModule),
+    importProvidersFrom(BrowserAnimationsModule),
   ],
 });

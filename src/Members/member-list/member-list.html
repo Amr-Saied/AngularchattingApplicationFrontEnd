@@ -1,13 +1,8 @@
 <div class="member-list-container">
-  <div *ngIf="loading" class="loading-spinner">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-  <div *ngIf="!loading && members.length === 0" class="no-members">
+  <div *ngIf="isLoaded && members.length === 0" class="no-members">
     <p>No members found.</p>
   </div>
-  <div class="row g-4" *ngIf="!loading && members.length > 0">
+  <div class="row g-4" *ngIf="members.length > 0">
     <div
       class="col-12 col-sm-6 col-md-4 col-lg-3"
       *ngFor="let member of members"
