@@ -11,6 +11,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { LoggedUser } from '../_models/logged-user';
 import { ToastrService } from 'ngx-toastr';
+import { DefaultPhotoService } from '../_services/default-photo.service';
+import { MemberService } from '../_services/member.service';
+import { Member } from '../_models/member';
 
 @Component({
   selector: 'app-nav',
@@ -22,12 +25,15 @@ import { ToastrService } from 'ngx-toastr';
 export class Nav implements OnInit {
   loginForm: FormGroup;
   loggedIn = false;
+  currentUser: Member | null = null;
 
   constructor(
     private accountService: AccountService,
     private router: Router,
     private toastr: ToastrService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private defaultPhotoService: DefaultPhotoService,
+    private memberService: MemberService
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -36,8 +42,28 @@ export class Nav implements OnInit {
   }
 
   ngOnInit() {
-    // Check if user is already logged in from local storage
-    this.loggedIn = this.accountService.isLoggedIn();
+    this.accountService.getLoginState().subscribe((isLoggedIn) => {
+      this.loggedIn = isLoggedIn;
+      if (isLoggedIn) {
+        this.loadCurrentUser();
+      } else {
+        this.currentUser = null;
+      }
+    });
+  }
+
+  loadCurrentUser() {
+    const loggedUser = this.accountService.getLoggedUserFromStorage();
+    if (loggedUser && loggedUser.username) {
+      this.memberService.getMemberByUsername(loggedUser.username).subscribe({
+        next: (member) => {
+          this.currentUser = member;
+        },
+        error: (error) => {
+          console.error('Error loading current user:', error);
+        },
+      });
+    }
   }
 
   login() {
@@ -80,17 +106,24 @@ export class Nav implements OnInit {
   }
 
   logout() {
-    this.loggedIn = false;
-    // Clear logged user data from local storage
     this.accountService.clearLoggedUserFromStorage();
-    // Show logout message
-    this.toastr.info('You have been logged out successfully');
-    // Redirect to home after logout
+    this.loggedIn = false;
+    this.currentUser = null;
     this.router.navigate(['/home']);
+    this.toastr.success('Logged out successfully!');
   }
 
   getLoggedUsername(): string {
     const loggedUser = this.accountService.getLoggedUserFromStorage();
     return loggedUser?.username || 'User';
+  }
+
+  getProfileImageUrl(): string {
+    if (!this.currentUser) {
+      return this.defaultPhotoService.getDefaultProfileImage();
+    }
+    return this.defaultPhotoService.getProfileImageUrl(
+      this.currentUser.photoUrl
+    );
   }
 }

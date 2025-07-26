@@ -33,6 +33,21 @@
   width: 100%;
 }
 
+/* Navbar Profile Photo Styling */
+.navbar-profile-photo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.navbar-profile-photo:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+}
+
 /* Animation */
 @keyframes fadeInDown {
   from {
@@ -49,5 +64,10 @@
 @media (max-width: 768px) {
   .navbar-nav {
     margin-bottom: 15px;
+  }
+
+  .navbar-profile-photo {
+    width: 28px;
+    height: 28px;
   }
 }

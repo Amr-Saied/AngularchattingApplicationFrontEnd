@@ -1,22 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  ReactiveFormsModule,
   FormBuilder,
   FormGroup,
   Validators,
-  ReactiveFormsModule,
 } from '@angular/forms';
+import { RouterModule, Router } from '@angular/router';
 import { MemberService } from '../_services/member.service';
-import { AccountService } from '../_services/account.service';
 import { Member } from '../_models/member';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../environments/environment';
+import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
+import { TextInput } from '../_forms/text-input/text-input';
+import { DefaultPhotoService } from '../_services/default-photo.service';
 
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TextInput],
   template: `
     <div class="profile-page-container container-fluid">
       <div
@@ -40,10 +41,7 @@ import { ToastrService } from 'ngx-toastr';
               class="col-12 col-md-4 d-flex flex-column align-items-center justify-content-start"
             >
               <img
-                [src]="
-                  member.photoUrl ||
-                  'https://randomuser.me/api/portraits/lego/1.jpg'
-                "
+                [src]="getProfileImageUrl(member.photoUrl)"
                 class="profile-photo mb-3 shadow"
                 alt="Profile Photo"
                 style="width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 4px 24px rgba(102, 126, 234, 0.12);"
@@ -59,20 +57,22 @@ import { ToastrService } from 'ngx-toastr';
               </div>
             </div>
             <div class="col-12 col-md-8">
+              <!-- Known As Field -->
+              <app-text-input
+                label="Known As"
+                fieldName="knownAs"
+                placeholder="Display name"
+                icon="fas fa-user"
+                [isRequired]="true"
+                formControlName="knownAs"
+              >
+              </app-text-input>
+
+              <!-- Introduction Field -->
               <div class="mb-3">
-                <label class="form-label fw-bold"
-                  ><i class="fas fa-user me-1"></i>Known As</label
-                >
-                <input
-                  class="form-control"
-                  formControlName="knownAs"
-                  placeholder="Display name"
-                />
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-bold"
-                  ><i class="fas fa-info-circle me-1"></i>About</label
-                >
+                <label class="form-label fw-bold">
+                  <i class="fas fa-info-circle me-1"></i>About
+                </label>
                 <textarea
                   class="form-control"
                   formControlName="introduction"
@@ -80,50 +80,59 @@ import { ToastrService } from 'ngx-toastr';
                   placeholder="Tell us about yourself..."
                 ></textarea>
               </div>
+
               <div class="row">
-                <div class="col-12 col-md-6 mb-3">
-                  <label class="form-label fw-bold"
-                    ><i class="fas fa-heart me-1"></i>Interests</label
-                  >
-                  <input
-                    class="form-control"
-                    formControlName="interests"
+                <!-- Interests Field -->
+                <div class="col-12 col-md-6">
+                  <app-text-input
+                    label="Interests"
+                    fieldName="interests"
                     placeholder="Your interests"
-                  />
-                </div>
-                <div class="col-12 col-md-6 mb-3">
-                  <label class="form-label fw-bold"
-                    ><i class="fas fa-search me-1"></i>Looking For</label
+                    icon="fas fa-heart"
+                    formControlName="interests"
                   >
-                  <input
-                    class="form-control"
-                    formControlName="lookingFor"
+                  </app-text-input>
+                </div>
+
+                <!-- Looking For Field -->
+                <div class="col-12 col-md-6">
+                  <app-text-input
+                    label="Looking For"
+                    fieldName="lookingFor"
                     placeholder="What are you looking for?"
-                  />
+                    icon="fas fa-search"
+                    formControlName="lookingFor"
+                  >
+                  </app-text-input>
                 </div>
               </div>
+
               <div class="row">
-                <div class="col-12 col-md-6 mb-3">
-                  <label class="form-label fw-bold"
-                    ><i class="fas fa-map-marker-alt me-1"></i>City</label
-                  >
-                  <input
-                    class="form-control"
-                    formControlName="city"
+                <!-- City Field -->
+                <div class="col-12 col-md-6">
+                  <app-text-input
+                    label="City"
+                    fieldName="city"
                     placeholder="City"
-                  />
-                </div>
-                <div class="col-12 col-md-6 mb-3">
-                  <label class="form-label fw-bold"
-                    ><i class="fas fa-flag me-1"></i>Country</label
+                    icon="fas fa-map-marker-alt"
+                    formControlName="city"
                   >
-                  <input
-                    class="form-control"
-                    formControlName="country"
+                  </app-text-input>
+                </div>
+
+                <!-- Country Field -->
+                <div class="col-12 col-md-6">
+                  <app-text-input
+                    label="Country"
+                    fieldName="country"
                     placeholder="Country"
-                  />
+                    icon="fas fa-flag"
+                    formControlName="country"
+                  >
+                  </app-text-input>
                 </div>
               </div>
+
               <div class="d-flex justify-content-end mt-4">
                 <button
                   class="btn btn-main px-4 py-2 w-100 w-md-auto"
@@ -152,16 +161,15 @@ import { ToastrService } from 'ngx-toastr';
 export class EditProfileComponent implements OnInit {
   member: Member | null = null;
   editForm: FormGroup;
-  successMsg = '';
-  errorMsg = '';
-  originalFormValues: any = {};
+  successMsg: string = '';
+  errorMsg: string = '';
 
   constructor(
     private memberService: MemberService,
     private accountService: AccountService,
-    private http: HttpClient,
     private toastr: ToastrService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private defaultPhotoService: DefaultPhotoService
   ) {
     this.editForm = this.fb.group({
       knownAs: ['', [Validators.required]],
@@ -194,64 +202,62 @@ export class EditProfileComponent implements OnInit {
 
   updateFormValues() {
     if (this.member) {
-      const formValues = {
+      this.editForm.patchValue({
         knownAs: this.member.knownAs || '',
         introduction: this.member.introduction || '',
         interests: this.member.interests || '',
         lookingFor: this.member.lookingFor || '',
         city: this.member.city || '',
         country: this.member.country || '',
-      };
-
-      this.editForm.patchValue(formValues);
-      this.originalFormValues = { ...formValues };
+      });
     }
   }
 
   hasFormChanges(): boolean {
-    if (!this.editForm) return false;
+    if (!this.originalMember) return false;
 
-    const currentValues = this.editForm.value;
+    const formValue = this.editForm.value;
     return (
-      JSON.stringify(currentValues) !== JSON.stringify(this.originalFormValues)
+      formValue.knownAs !== this.originalMember.knownAs ||
+      formValue.introduction !== this.originalMember.introduction ||
+      formValue.interests !== this.originalMember.interests ||
+      formValue.lookingFor !== this.originalMember.lookingFor ||
+      formValue.city !== this.originalMember.city ||
+      formValue.country !== this.originalMember.country
     );
   }
 
-  hasChanges(): boolean {
-    if (!this.member || !this.originalMember) return false;
-    return JSON.stringify(this.member) !== JSON.stringify(this.originalMember);
+  onSubmit() {
+    if (this.editForm.valid && this.member) {
+      const formValue = this.editForm.value;
+      const updatedMember: Member = {
+        ...this.member,
+        knownAs: formValue.knownAs,
+        introduction: formValue.introduction,
+        interests: formValue.interests,
+        lookingFor: formValue.lookingFor,
+        city: formValue.city,
+        country: formValue.country,
+      };
+
+      this.memberService.updateMember(this.member.id, updatedMember).subscribe({
+        next: () => {
+          this.successMsg = 'Profile updated successfully!';
+          this.errorMsg = '';
+          this.originalMember = { ...updatedMember };
+          this.toastr.success('Profile updated successfully!');
+        },
+        error: () => {
+          this.errorMsg = 'Failed to update profile.';
+          this.successMsg = '';
+          this.toastr.error('Failed to update profile.');
+        },
+      });
+    }
   }
 
-  onSubmit() {
-    if (!this.member || this.editForm.invalid) return;
-
-    // Update member object with form values
-    this.member.knownAs = this.editForm.get('knownAs')?.value;
-    this.member.introduction = this.editForm.get('introduction')?.value;
-    this.member.interests = this.editForm.get('interests')?.value;
-    this.member.lookingFor = this.editForm.get('lookingFor')?.value;
-    this.member.city = this.editForm.get('city')?.value;
-    this.member.country = this.editForm.get('country')?.value;
-
-    if (!this.hasChanges()) {
-      this.toastr.info("You didn't change anything to update.");
-      return;
-    }
-
-    this.successMsg = '';
-    this.errorMsg = '';
-    this.memberService.updateMember(this.member.id, this.member).subscribe({
-      next: (updated) => {
-        this.successMsg = 'Profile updated successfully!';
-        this.member = updated;
-        this.originalMember = { ...updated };
-        this.updateFormValues();
-      },
-      error: () => {
-        this.toastr.error('Failed to update profile.');
-        console.log('Failed to update profile.');
-      },
-    });
+  getProfileImageUrl(photoUrl: string | undefined): string {
+    return this.defaultPhotoService.getProfileImageUrl(photoUrl);
   }
 
   onFileSelected(event: any) {

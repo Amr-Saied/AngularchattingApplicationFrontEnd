@@ -10,10 +10,12 @@ import {
 } from '@angular/forms';
 import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
+import { TextInput } from '../_forms/text-input/text-input';
+import { RegisterModel } from '../_models/register';
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TextInput],
   templateUrl: './register.html',
   styleUrl: './register.css',
   standalone: true,
@@ -50,6 +52,11 @@ export class Register {
           ],
         ],
         confirmPassword: ['', [Validators.required]],
+        dateOfBirth: ['', [Validators.required]],
+        knownAs: ['', [Validators.maxLength(50)]],
+        gender: ['', [Validators.required]],
+        city: ['', [Validators.maxLength(100)]],
+        country: ['', [Validators.maxLength(100)]],
       },
       { validators: this.passwordMatchValidator }
     );
@@ -72,9 +79,14 @@ export class Register {
   register() {
     if (this.registerForm.valid) {
       this.isLoading = true;
-      const model = {
+      const model: RegisterModel = {
         Username: this.registerForm.get('username')?.value,
         Password: this.registerForm.get('password')?.value,
+        DateOfBirth: this.registerForm.get('dateOfBirth')?.value,
+        KnownAs: this.registerForm.get('knownAs')?.value || undefined,
+        Gender: this.registerForm.get('gender')?.value,
+        City: this.registerForm.get('city')?.value || undefined,
+        Country: this.registerForm.get('country')?.value || undefined,
       };
 
       this.accountService.register(model).subscribe({
@@ -138,20 +150,5 @@ export class Register {
       return 'Passwords do not match';
     }
     return '';
-  }
-
-  togglePasswordVisibility(fieldName: string) {
-    const input = document.getElementById(fieldName) as HTMLInputElement;
-    const toggle = document.getElementById(fieldName + 'Toggle') as HTMLElement;
-
-    if (input && toggle) {
-      if (input.type === 'password') {
-        input.type = 'text';
-        toggle.className = 'fas fa-eye-slash';
-      } else {
-        input.type = 'password';
-        toggle.className = 'fas fa-eye';
-      }
-    }
   }
 }

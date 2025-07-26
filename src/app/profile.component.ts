@@ -15,6 +15,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { DefaultPhotoService } from '../_services/default-photo.service';
 
 @Component({
   selector: 'app-profile',
@@ -35,10 +36,7 @@ import { NgxSpinnerModule } from 'ngx-spinner';
           <div class="profile-header">
             <div class="profile-photo-wrapper">
               <img
-                [src]="
-                  user.photoUrl ||
-                  'https://randomuser.me/api/portraits/lego/1.jpg'
-                "
+                [src]="getProfileImageUrl(user.photoUrl)"
                 alt="Profile Photo"
                 class="profile-photo shadow"
               />
@@ -195,11 +193,12 @@ import { NgxSpinnerModule } from 'ngx-spinner';
               role="tabpanel"
             >
               <div class="p-4">
-                <div
-                  class="d-flex justify-content-between align-items-center mb-3"
-                >
-                  <h4 class="fw-bold mb-0">Photo Gallery</h4>
-                  <div class="d-flex gap-2">
+                <!-- Gallery Header with Text and Controls -->
+                <div class="gallery-header">
+                  <div class="gallery-title">
+                    <h4 class="fw-bold mb-0">Photo Gallery</h4>
+                  </div>
+                  <div class="gallery-controls">
                     <label class="btn btn-main btn-sm">
                       <i class="fas fa-plus me-1"></i>Add Photo
                       <input
@@ -219,7 +218,11 @@ import { NgxSpinnerModule } from 'ngx-spinner';
                   </div>
                 </div>
 
-                <div class="gallery-wrapper" *ngIf="!editGalleryMode">
+                <!-- Gallery with photos -->
+                <div
+                  class="gallery-wrapper"
+                  *ngIf="user.photos && user.photos.length > 0"
+                >
                   <gallery
                     #galleryComp
                     [items]="galleryImages"
@@ -229,7 +232,27 @@ import { NgxSpinnerModule } from 'ngx-spinner';
                   ></gallery>
                 </div>
 
-                <div class="gallery-wrapper edit-mode" *ngIf="editGalleryMode">
+                <!-- Empty gallery state -->
+                <div
+                  class="empty-gallery"
+                  *ngIf="!user.photos || user.photos.length === 0"
+                >
+                  <div class="empty-gallery-content">
+                    <i class="fas fa-images empty-gallery-icon"></i>
+                    <h4 class="empty-gallery-title">No Photos Yet</h4>
+                    <p class="empty-gallery-message">
+                      You haven't added any photos to your gallery yet. Click
+                      "Add Photo" above to get started!
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="gallery-wrapper edit-mode"
+                  *ngIf="
+                    editGalleryMode && user.photos && user.photos.length > 0
+                  "
+                >
                   <div class="row g-2">
                     <div
                       class="col-4 col-md-3"
@@ -272,12 +295,9 @@ export class ProfileComponent implements OnInit {
     city: 'Cairo',
     age: 25,
     gender: 'Female',
-    introduction:
-      'This is a **sample introduction** text to demonstrate how the "About Me" section looks with more content. I am a passionate individual currently exploring new horizons in software development. I enjoy learning and building new things, and constantly striving to improve my skills. <br><br>My interests include **backend development with ASP.NET**, database design, and cloud technologies. I am always open to new challenges and collaborations. Feel free to connect!',
-    interests:
-      'Software development, reading, traveling, photography, cooking, hiking, music, movies, technology, learning new skills',
-    lookingFor:
-      'Friendship, meaningful conversations, professional networking, travel companions, people to share interests with',
+    introduction: '',
+    interests: '',
+    lookingFor: '',
     photos: [
       {
         id: 1,
@@ -302,7 +322,8 @@ export class ProfileComponent implements OnInit {
     private memberService: MemberService,
     private accountService: AccountService,
     private http: HttpClient,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private defaultPhotoService: DefaultPhotoService
   ) {}
 
   ngOnInit() {
@@ -342,8 +363,16 @@ export class ProfileComponent implements OnInit {
     );
   }
 
+  getProfileImageUrl(photoUrl: string | undefined): string {
+    return this.defaultPhotoService.getProfileImageUrl(photoUrl);
+  }
+
   editProfile() {
     this.router.navigate(['/edit-profile']);
+  }
+
+  toggleEditGallery() {
+    this.editGalleryMode = !this.editGalleryMode;
   }
 
   onGalleryPhotoSelected(event: any) {
@@ -383,10 +412,6 @@ export class ProfileComponent implements OnInit {
           },
         });
     }
-  }
-
-  toggleEditGallery() {
-    this.editGalleryMode = !this.editGalleryMode;
   }
 
   deletePhoto(photoId: number) {

@@ -1,9 +1,7 @@
 <div class="member-card main-card">
   <div class="member-photo">
     <img
-      [src]="
-        member.photoUrl || 'https://randomuser.me/api/portraits/lego/1.jpg'
-      "
+      [src]="getProfileImageUrl(member.photoUrl)"
       alt="{{ member.userName }}'s photo"
     />
   </div>

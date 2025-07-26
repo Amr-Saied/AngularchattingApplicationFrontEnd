@@ -10,6 +10,7 @@ import {
   GalleryComponent,
 } from 'ng-gallery';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { DefaultPhotoService } from '../../_services/default-photo.service';
 
 @Component({
   selector: 'app-member-detail',
@@ -21,13 +22,14 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 export class MemberDetail implements OnInit {
   member?: Member;
   loading = true;
-  activeTab: string = 'about';
+  activeTab: string = 'details';
   galleryImages: GalleryItem[] = [];
   @ViewChild(GalleryComponent) galleryComp?: GalleryComponent;
 
   constructor(
     private route: ActivatedRoute,
-    private memberService: MemberService
+    private memberService: MemberService,
+    private defaultPhotoService: DefaultPhotoService
   ) {}
 
   ngOnInit() {
@@ -62,5 +64,9 @@ export class MemberDetail implements OnInit {
     this.galleryImages = (this.member?.photos || []).map(
       (photo) => new ImageItem({ src: photo.url, thumb: photo.url })
     );
+  }
+
+  getProfileImageUrl(photoUrl: string | undefined): string {
+    return this.defaultPhotoService.getProfileImageUrl(photoUrl);
   }
 }
