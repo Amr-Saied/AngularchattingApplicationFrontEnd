@@ -7,7 +7,6 @@ import { environment } from '../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class MemberService {
   private baseUrl = environment.apiUrl + 'Users';
-
   constructor(private http: HttpClient) {}
 
   getMembers(): Observable<Member[]> {
@@ -22,5 +21,22 @@ export class MemberService {
     return this.http.get<Member>(
       this.baseUrl + '/GetUserByUsername/' + username
     );
+  }
+
+  updateMember(id: number, member: Member): Observable<Member> {
+    return this.http.put<Member>(this.baseUrl + '/UpdateUser/' + id, member);
+  }
+
+  uploadPhoto(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(
+      this.baseUrl + '/upload-photo',
+      formData
+    );
+  }
+
+  deletePhoto(userId: number, photoId: number) {
+    return this.http.delete(this.baseUrl + `/DeletePhoto/${userId}/${photoId}`);
   }
 }

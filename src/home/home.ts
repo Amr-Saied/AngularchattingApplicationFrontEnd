@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { Register } from '../register/register';
 import { AccountService } from '../_services/account.service';
@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, FormsModule, RouterModule, Register],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, Register],
   templateUrl: './home.html',
   styleUrl: './home.css',
   standalone: true,

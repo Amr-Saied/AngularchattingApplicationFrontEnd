@@ -1,151 +1,284 @@
-.profile-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  width: 100%;
-  margin-top: 1.5rem;
-}
-
-.profile-actions .btn {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  font-size: 1.4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 4px rgba(102, 126, 234, 0.1);
-  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-  background: #fff;
-  color: #764ba2;
-  border: 2px solid #e9ecef;
-}
-
-.profile-actions .btn:hover {
-  background: var(--main-gradient);
-  color: #fff;
-  border-color: #764ba2;
-  transform: translateY(-2px) scale(1.07);
-}
-
+/* Profile Page Container */
 .profile-page-container {
-  padding: 1rem;
-  max-width: 700px;
+  padding: 20px;
+  max-width: 800px; /* REDUCED from 1200px to 800px */
   margin: 0 auto;
-  min-height: auto; /* Changed from 100vh to auto to remove scrollbar */
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 2rem;
 }
 
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-}
-
+/* Profile Card */
 .profile-card {
-  background: var(--main-card-bg);
-  border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.18),
-    0 1.5px 8px rgba(118, 75, 162, 0.08);
-  max-width: 460px;
-  width: 100%;
-  min-width: 0;
-  padding: 2.2rem 1.5rem 2rem 1.5rem;
-  position: relative;
-  overflow: visible;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin-bottom: 20px;
+  min-height: 600px; /* Increased minimum height */
 }
 
+/* Tab Navigation */
+.profile-tabs {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+}
+
+.tab-btn {
+  flex: 1;
+  min-width: 120px; /* Ensure minimum width for readability */
+  padding: 15px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem; /* Slightly smaller font */
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.tab-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.tab-btn.active {
+  color: #764ba2;
+  border-bottom-color: #764ba2;
+  background: white;
+}
+
+.tab-btn i {
+  margin-right: 8px;
+}
+
+/* Tab Content */
+.tab-content {
+  padding: 0;
+}
+
+/* Profile Photo Row */
 .profile-photo-row {
   display: flex;
-  justify-content: center;
-  margin-bottom: 1rem; /* Reduced margin */
+  justify-content: center; /* Center the profile photo */
+  margin-bottom: 1.5rem;
 }
 
 .profile-photo {
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
   object-fit: cover;
   border-radius: 50%;
-  border: 6px solid #fff;
-  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.12);
-  background: #f5f6fa;
-  z-index: 2;
+  border: 5px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.profile-photo:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(33, 147, 176, 0.3);
-}
-
+/* Profile Info (for 'About' tab) */
 .profile-info {
-  text-align: center;
+  text-align: center; /* Center content of profile info */
+  margin-bottom: 2rem;
+  padding: 0 2rem; /* Add horizontal padding */
 }
 
 .profile-name {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #764ba2;
-  margin-bottom: 0.2rem;
-  letter-spacing: 0.5px;
-  text-align: center;
-  word-break: break-word;
-}
-
-.profile-meta {
-  font-size: 1.18rem;
-  color: #667eea;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.2rem;
+  color: #6a0572;
+  font-size: 2.5rem; /* Slightly larger for main name */
+  font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-.profile-meta span {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
+.profile-meta {
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
 }
 
-.profile-meta i {
-  color: #2193b0;
-  font-size: 1rem; /* Reduced size */
+.profile-meta span {
+  display: inline-block; /* Keep meta items on same line */
+  margin: 0 8px; /* Spacing between meta items */
+}
+
+.profile-meta span i {
+  color: #764ba2;
+  margin-right: 5px;
 }
 
 .profile-section {
-  width: 100%;
-  margin-bottom: 1.1rem;
-  border-left: 3px solid #764ba2;
-  padding-left: 1rem;
-  word-break: break-word;
-  background: rgba(245, 246, 250, 0.7);
-  border-radius: 0.7rem;
-  box-shadow: 0 1px 4px rgba(102, 126, 234, 0.06);
-}
-
-.profile-section:hover {
-  background: rgba(33, 147, 176, 0.08);
-  transform: translateY(-2px);
+  margin-bottom: 1.5rem;
+  text-align: left; /* Text content should be left-aligned */
+  padding: 0 2rem; /* Add horizontal padding */
 }
 
 .profile-section h4 {
-  font-size: 1.15rem;
-  color: #764ba2;
-  margin-bottom: 0.2rem;
-  font-weight: 600;
+  color: #6a0572;
+  font-size: 1.3rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 5px;
 }
 
 .profile-section p {
   color: #333;
-  font-size: 1.13rem;
-  margin-bottom: 0;
-  word-break: break-word;
+  line-height: 1.6;
+  white-space: pre-wrap; /* Preserve line breaks */
+  word-wrap: break-word; /* Break long words */
+  margin: 0; /* Remove default margins */
+}
+
+/* Profile Actions (Like/Message buttons) */
+.profile-actions {
+  display: flex;
+  justify-content: center; /* Center the buttons */
+  gap: 15px; /* Space between buttons */
+  margin-top: 2rem; /* Space above buttons */
+  padding: 0 2rem 2rem 2rem; /* Add padding around buttons */
+}
+
+.profile-actions .btn {
+  font-size: 1.2rem;
+  padding: 12px 25px;
+  border-radius: 50px; /* Make them round */
+  transition: all 0.3s ease;
+}
+
+.profile-actions .btn:hover {
+  background-color: #f0f2f5;
+  color: #764ba2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Photo Gallery Specific Styles - REDUCED WIDTH */
+.gallery-wrapper {
+  height: 450px; /* INCREASED HEIGHT for better display */
+  width: 70%; /* REDUCED WIDTH - was 100%, now 70% */
+  margin: 0 auto; /* Center the gallery */
+  overflow: hidden; /* Hide any overflow */
+  background-color: #f8f8f8; /* Light background for the gallery area */
+  border-radius: 0.5rem;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); /* Subtle inner shadow */
+}
+
+/* Target the ng-gallery component itself */
+.gallery-wrapper gallery {
+  width: 100%;
+  height: 100%; /* Crucial: make the ng-gallery fill its wrapper */
+  display: block; /* Ensure it behaves like a block element */
+}
+
+/* Target images within ng-gallery (main view and thumbnails) */
+.gallery-wrapper gallery .g-image,
+.gallery-wrapper gallery .g-thumb,
+.gallery-wrapper gallery img {
+  width: 100% !important; /* Force images to fill their container width */
+  height: 100% !important; /* Force images to fill their container height */
+  object-fit: contain !important; /* IMPORTANT: Use 'contain' to show the whole image, avoiding cropping. This is likely why it looked 'bad' before if it was trying to 'cover' a very non-standard aspect ratio image. */
+  object-position: center !important; /* Center the image within its space */
+  display: block;
+}
+
+/* Empty Gallery State - REDUCED WIDTH */
+.empty-gallery {
+  height: 450px;
+  width: 70%; /* REDUCED WIDTH - was 100%, now 70% */
+  margin: 0 auto; /* Center the empty gallery */
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.empty-gallery:hover {
+  border-color: #764ba2;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e3e6ea 100%);
+}
+
+.empty-gallery-content {
+  text-align: center;
+  padding: 2rem;
+  max-width: 400px;
+}
+
+.empty-gallery-icon {
+  font-size: 4rem;
+  color: #adb5bd;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-gallery-title {
+  color: #6c757d;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.empty-gallery-message {
+  color: #868e96;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 767.98px) {
+  .profile-card.main-card {
+    padding: 1.5rem;
+    margin: 0 10px;
+    min-height: 500px; /* Slightly smaller on mobile */
+  }
+  .profile-name {
+    font-size: 2rem;
+  }
+  .profile-meta span {
+    display: block; /* Stack meta items on small screens */
+    margin: 5px 0;
+  }
+  .profile-section h4 {
+    font-size: 1.1rem;
+  }
+  .profile-actions .btn {
+    font-size: 1rem;
+    padding: 10px 20px;
+  }
+  .gallery-wrapper {
+    height: 300px; /* Adjust height for smaller screens */
+    width: 90%; /* Wider on mobile for better usability */
+  }
+  .empty-gallery {
+    height: 300px;
+    width: 90%; /* Wider on mobile for better usability */
+  }
+  .empty-gallery-icon {
+    font-size: 3rem;
+  }
+  .empty-gallery-title {
+    font-size: 1.3rem;
+  }
+  .empty-gallery-message {
+    font-size: 0.9rem;
+  }
+  /* Reduce padding on mobile */
+  .profile-info,
+  .profile-section,
+  .profile-actions {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  /* Adjust tabs for mobile */
+  .tab-btn {
+    min-width: 80px; /* Smaller minimum width on mobile */
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  .tab-btn i {
+    margin-right: 4px; /* Smaller icon spacing on mobile */
+  }
 }

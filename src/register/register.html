@@ -1,6 +1,6 @@
 <div class="container">
   <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
+    <div class="col-md-8 col-lg-6">
       <div class="card shadow-lg border-0">
         <div class="card-header bg-primary text-white text-center py-3">
           <h2 class="card-title mb-0">
@@ -11,97 +11,138 @@
         </div>
 
         <div class="card-body p-4">
-          <form #registerForm="ngForm" (ngSubmit)="register()">
+          <form [formGroup]="registerForm" (ngSubmit)="register()">
+            <!-- Username Field -->
+            <app-text-input
+              label="Username"
+              fieldName="username"
+              placeholder="Enter your username"
+              icon="fas fa-user"
+              [isRequired]="true"
+              [errorMessage]="getFieldError('username')"
+              formControlName="username"
+            >
+            </app-text-input>
+
+            <!-- Password Field -->
+            <app-text-input
+              label="Password"
+              fieldName="password"
+              type="password"
+              placeholder="Enter your password"
+              icon="fas fa-lock"
+              [isRequired]="true"
+              [showPasswordToggle]="true"
+              [errorMessage]="getFieldError('password')"
+              formControlName="password"
+            >
+            </app-text-input>
+
+            <!-- Confirm Password Field -->
+            <app-text-input
+              label="Confirm Password"
+              fieldName="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              icon="fas fa-lock"
+              [isRequired]="true"
+              [showPasswordToggle]="true"
+              [errorMessage]="getFieldError('confirmPassword')"
+              formControlName="confirmPassword"
+            >
+            </app-text-input>
+
+            <!-- Password Match Error -->
+            <div class="form-text" *ngIf="getPasswordMatchError()">
+              <small class="text-danger">
+                <i class="fas fa-exclamation-circle me-1"></i>
+                {{ getPasswordMatchError() }}
+              </small>
+            </div>
+
+            <!-- Date of Birth Field -->
             <div class="mb-3">
-              <label for="username" class="form-label">
-                <i class="fas fa-user me-1 text-primary"></i>
-                Username
+              <label for="dateOfBirth" class="form-label">
+                <i class="fas fa-calendar me-2"></i>
+                Date of Birth *
               </label>
-              <div class="input-group">
-                <span class="input-group-text bg-light">
-                  <i class="fas fa-user text-muted"></i>
-                </span>
-                <input
-                  type="text"
-                  class="form-control"
-                  id="username"
-                  placeholder="Enter your username"
-                  name="Username"
-                  [(ngModel)]="model.Username"
-                  required
-                  minlength="3"
-                  #username="ngModel"
-                />
-              </div>
+              <input
+                type="date"
+                class="form-control"
+                id="dateOfBirth"
+                formControlName="dateOfBirth"
+                [class.is-invalid]="
+                  registerForm.get('dateOfBirth')?.invalid &&
+                  registerForm.get('dateOfBirth')?.touched
+                "
+              />
               <div
-                class="form-text"
-                *ngIf="username.invalid && username.touched"
+                class="invalid-feedback"
+                *ngIf="getFieldError('dateOfBirth')"
               >
-                <small
-                  class="text-danger"
-                  *ngIf="username.errors?.['required']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Username is
-                  required
-                </small>
-                <small
-                  class="text-danger"
-                  *ngIf="username.errors?.['minlength']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Username must be
-                  at least 3 characters
-                </small>
+                {{ getFieldError("dateOfBirth") }}
               </div>
             </div>
 
+            <!-- Known As Field -->
+            <app-text-input
+              label="Known As"
+              fieldName="knownAs"
+              placeholder="Enter your display name"
+              icon="fas fa-id-card"
+              [isRequired]="false"
+              [errorMessage]="getFieldError('knownAs')"
+              formControlName="knownAs"
+            >
+            </app-text-input>
+
+            <!-- Gender Field -->
             <div class="mb-3">
-              <label for="password" class="form-label">
-                <i class="fas fa-lock me-1 text-primary"></i>
-                Password
+              <label for="gender" class="form-label">
+                <i class="fas fa-venus-mars me-2"></i>
+                Gender *
               </label>
-              <div class="input-group">
-                <span class="input-group-text bg-light">
-                  <i class="fas fa-lock text-muted"></i>
-                </span>
-                <input
-                  type="password"
-                  class="form-control"
-                  id="password"
-                  placeholder="Enter your password"
-                  name="Password"
-                  [(ngModel)]="model.Password"
-                  required
-                  minlength="6"
-                  #password="ngModel"
-                />
-                <button
-                  class="btn btn-outline-secondary"
-                  type="button"
-                  (click)="togglePasswordVisibility()"
-                >
-                  <i class="fas fa-eye" id="passwordToggle"></i>
-                </button>
-              </div>
-              <div
-                class="form-text"
-                *ngIf="password.invalid && password.touched"
+              <select
+                class="form-select"
+                id="gender"
+                formControlName="gender"
+                [class.is-invalid]="
+                  registerForm.get('gender')?.invalid &&
+                  registerForm.get('gender')?.touched
+                "
               >
-                <small
-                  class="text-danger"
-                  *ngIf="password.errors?.['required']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Password is
-                  required
-                </small>
-                <small
-                  class="text-danger"
-                  *ngIf="password.errors?.['minlength']"
-                >
-                  <i class="fas fa-exclamation-circle me-1"></i>Password must be
-                  at least 6 characters
-                </small>
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="getFieldError('gender')">
+                {{ getFieldError("gender") }}
               </div>
             </div>
+
+            <!-- City Field -->
+            <app-text-input
+              label="City"
+              fieldName="city"
+              placeholder="Enter your city"
+              icon="fas fa-city"
+              [isRequired]="false"
+              [errorMessage]="getFieldError('city')"
+              formControlName="city"
+            >
+            </app-text-input>
+
+            <!-- Country Field -->
+            <app-text-input
+              label="Country"
+              fieldName="country"
+              placeholder="Enter your country"
+              icon="fas fa-globe"
+              [isRequired]="false"
+              [errorMessage]="getFieldError('country')"
+              formControlName="country"
+            >
+            </app-text-input>
 
             <div class="d-grid gap-2">
               <button

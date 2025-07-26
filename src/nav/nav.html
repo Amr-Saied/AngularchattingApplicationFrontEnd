@@ -38,7 +38,7 @@
 
       <!-- Enhanced Login Form -->
       <form
-        #loginForm="ngForm"
+        [formGroup]="loginForm"
         class="d-flex align-items-center"
         role="Login"
         (ngSubmit)="login()"
@@ -53,8 +53,7 @@
             type="text"
             placeholder="Username"
             aria-label="Username"
-            [(ngModel)]="model.Username"
-            name="Username"
+            formControlName="username"
             required
           />
         </div>
@@ -68,46 +67,57 @@
             type="password"
             placeholder="Password"
             aria-label="Password"
-            [(ngModel)]="model.Password"
-            name="Password"
+            formControlName="password"
             required
           />
         </div>
 
-        <button class="btn btn-success px-4" type="submit">
+        <button
+          class="btn btn-success px-4"
+          type="submit"
+          [disabled]="loginForm.invalid"
+        >
           <i class="fas fa-sign-in-alt me-1"></i>
           Login
         </button>
       </form>
 
-      <div class="dropdown ms-3" *ngIf="loggedIn">
-        <button
-          class="btn btn-secondary dropdown-toggle"
-          type="button"
-          id="dropdownMenuButton"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
-          <i class="fas fa-user-circle me-1"></i>
-          Welcome {{ model.Username }}
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-          <li>
-            <a class="dropdown-item" routerLink="/members"
-              ><i class="fas fa-user me-2"></i>Profile</a
-            >
-          </li>
-          <li>
-            <a class="dropdown-item" href="#" (click)="logout()">
-              <i class="fas fa-sign-out-alt me-2"></i>Logout
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#"
-              ><i class="fas fa-cog me-2"></i>Settings</a
-            >
-          </li>
-        </ul>
+      <!-- User Menu for Logged In Users -->
+      <div class="navbar-nav ms-auto" *ngIf="loggedIn">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle d-flex align-items-center"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <img
+              [src]="getProfileImageUrl()"
+              alt="Profile Photo"
+              class="navbar-profile-photo me-2"
+            />
+            <span>{{ getLoggedUsername() }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" routerLink="/profile">
+                <i class="fas fa-user me-2"></i>Profile
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/edit-profile">
+                <i class="fas fa-edit me-2"></i>Edit Profile
+              </a>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item text-danger" href="#" (click)="logout()">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+              </a>
+            </li>
+          </ul>
+        </li>
       </div>
     </div>
   </div>
