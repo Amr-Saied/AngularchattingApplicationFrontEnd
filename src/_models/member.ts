@@ -13,6 +13,7 @@ export interface Member {
   knownAs?: string;
   created: Date;
   lastActive: Date;
+  lastActiveStatus?: string;
   gender?: string;
   introduction?: string;
   lookingFor?: string;

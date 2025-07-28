@@ -57,4 +57,12 @@ export class MemberService {
     const params = new HttpParams().set('searchTerm', searchTerm);
     return this.http.get<Member[]>(this.baseUrl + '/SearchUsers', { params });
   }
+
+  getLastActiveStatus(
+    userId: number
+  ): Observable<{ lastActiveStatus: string }> {
+    return this.http.get<{ lastActiveStatus: string }>(
+      this.baseUrl + '/GetLastActiveStatus/' + userId
+    );
+  }
 }

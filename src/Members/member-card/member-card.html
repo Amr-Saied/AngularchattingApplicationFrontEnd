@@ -8,6 +8,11 @@
   <div class="member-info">
     <h5 class="member-name">{{ member.knownAs || member.userName }}</h5>
     <p class="member-city">{{ member.city }}</p>
+    <p class="member-last-active" *ngIf="lastActiveStatus">
+      <small class="text-muted">
+        <i class="fas fa-clock"></i> {{ lastActiveStatus }}
+      </small>
+    </p>
     <div class="member-actions mt-3 d-flex justify-content-center gap-2">
       <a
         [routerLink]="['/member', member.id]"

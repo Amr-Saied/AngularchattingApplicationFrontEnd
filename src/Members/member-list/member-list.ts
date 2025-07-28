@@ -59,7 +59,7 @@ export class MemberList implements OnInit {
     this.isSearching = true;
     this.memberService.searchMembers(this.searchTerm).subscribe({
       next: (members) => {
-        this.members = members.filter((m) => m.role !== 'Admin');
+        this.members = members;
         this.isSearching = false;
         this.isLoaded = true;
 
@@ -78,7 +78,7 @@ export class MemberList implements OnInit {
   loadMembers() {
     this.memberService.getMembersPaged(this.paginationParams).subscribe({
       next: (response: PagedResult<Member>) => {
-        this.members = response.items.filter((m) => m.role !== 'Admin');
+        this.members = response.items;
         this.totalPages = response.totalPages;
         this.totalCount = response.totalCount;
         this.isLoaded = true;
