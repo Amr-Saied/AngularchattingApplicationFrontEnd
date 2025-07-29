@@ -59,6 +59,16 @@
         </div>
         <div class="profile-info">
           <h1 class="profile-name">{{ member.knownAs || member.userName }}</h1>
+
+          <!-- Like Count Display -->
+          <div class="like-count-display" *ngIf="likeCount > 0">
+            <span class="like-count-badge">
+              <i class="fas fa-heart text-danger"></i> {{ likeCount }} like{{
+                likeCount !== 1 ? "s" : ""
+              }}
+            </span>
+          </div>
+
           <div class="profile-meta">
             <span *ngIf="member.city"
               ><i class="fas fa-map-marker-alt me-1"></i>{{ member.city }}</span
@@ -88,11 +98,32 @@
           </div>
         </div>
         <div class="profile-actions">
-          <button class="btn btn-outline-secondary btn-lg" title="Like">
-            <i class="far fa-heart"></i>
+          <button
+            class="btn btn-lg like-btn"
+            [class.btn-outline-danger]="!isLiked"
+            [class.btn-danger]="isLiked"
+            [class.btn-secondary]="isOwnProfile"
+            [disabled]="likeLoading || isOwnProfile"
+            (click)="toggleLike()"
+            [title]="
+              isOwnProfile
+                ? 'Cannot like yourself'
+                : isLiked
+                ? 'Unlike'
+                : 'Like'
+            "
+          >
+            <i class="fas fa-heart" *ngIf="isLiked"></i>
+            <i class="far fa-heart" *ngIf="!isLiked"></i>
+            <span
+              class="spinner-border spinner-border-sm ms-1"
+              *ngIf="likeLoading"
+            ></span>
+            {{ isLiked ? "Unlike" : "Like" }}
           </button>
           <button class="btn btn-outline-secondary btn-lg" title="Message">
             <i class="far fa-envelope"></i>
+            Message
           </button>
         </div>
       </div>

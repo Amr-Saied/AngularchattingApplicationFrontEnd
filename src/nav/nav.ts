@@ -80,6 +80,7 @@ export class Nav implements OnInit {
           // Save logged user data to local storage
           if (response.username && response.token) {
             const loggedUser: LoggedUser = {
+              id: response.id,
               username: response.username,
               token: response.token,
               role: response.role,
@@ -125,5 +126,12 @@ export class Nav implements OnInit {
     return this.defaultPhotoService.getProfileImageUrl(
       this.currentUser.photoUrl
     );
+  }
+
+  onExploreMembersClick() {
+    // Notify service that Explore Members was clicked
+    this.memberService.notifyExploreMembersClicked();
+    // Navigate to members page
+    this.router.navigate(['/members']);
   }
 }

@@ -52,4 +52,16 @@ export class AccountService {
   getLoginState(): Observable<boolean> {
     return this.loginStateSubject.asObservable();
   }
+
+  // Get current user ID
+  getCurrentUserId(): number | null {
+    const loggedUser = this.getLoggedUserFromStorage();
+    return loggedUser?.id || null;
+  }
+
+  // Check if current user is viewing their own profile
+  isCurrentUser(userId: number): boolean {
+    const currentUserId = this.getCurrentUserId();
+    return currentUserId === userId;
+  }
 }

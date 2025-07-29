@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Member } from '../_models/member';
 import { environment } from '../environments/environment';
 import { PaginationParams, PagedResult } from '../_models/pagination';
@@ -8,7 +8,19 @@ import { PaginationParams, PagedResult } from '../_models/pagination';
 @Injectable({ providedIn: 'root' })
 export class MemberService {
   private baseUrl = environment.apiUrl + 'Users';
+  private exploreMembersClicked$ = new Subject<void>();
+
   constructor(private http: HttpClient) {}
+
+  // Method to notify when Explore Members is clicked
+  notifyExploreMembersClicked() {
+    this.exploreMembersClicked$.next();
+  }
+
+  // Observable to listen for Explore Members clicks
+  getExploreMembersClicked() {
+    return this.exploreMembersClicked$.asObservable();
+  }
 
   getMembers(): Observable<Member[]> {
     return this.http.get<Member[]>(this.baseUrl + '/GetUsers');
