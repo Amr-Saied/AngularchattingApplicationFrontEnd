@@ -1,1 +1,117 @@
-<p>messages works!</p>
+<div class="messages-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading conversations...</p>
+  </div>
+
+  <!-- Conversations List -->
+  <div
+    *ngIf="!loading && !showChat && !showLikedUsers && conversations.length > 0"
+    class="conversations-list"
+  >
+    <h2>Your Conversations</h2>
+    <div
+      class="conversation-item"
+      *ngFor="let conversation of conversations"
+      (click)="selectConversation(conversation)"
+    >
+      <div class="conversation-info">
+        <h3>{{ conversation.otherUsername }}</h3>
+        <p class="last-message">{{ conversation.lastMessage }}</p>
+        <span class="time">{{ formatTime(conversation.lastMessageTime) }}</span>
+      </div>
+      <div class="unread-badge" *ngIf="conversation.unreadCount > 0">
+        {{ conversation.unreadCount }}
+      </div>
+    </div>
+  </div>
+
+  <!-- No Conversations - Show Liked Users -->
+  <div *ngIf="!loading && !showChat && showLikedUsers" class="liked-users">
+    <h2>Start a Conversation</h2>
+    <p class="no-conversations">
+      You don't have any conversations yet. Start chatting with people you like!
+    </p>
+
+    <div class="liked-users-grid">
+      <div
+        class="user-card"
+        *ngFor="let user of likedUsers"
+        (click)="startChatWithUser(user)"
+      >
+        <img
+          [src]="getProfileImageUrl(user.photoUrl)"
+          [alt]="user.userName"
+          class="user-photo"
+        />
+        <div class="user-info">
+          <h3>{{ user.userName }}</h3>
+          <p>{{ user.knownAs }}</p>
+        </div>
+        <button class="chat-button">Start Chat</button>
+      </div>
+    </div>
+
+    <div *ngIf="likedUsers.length === 0" class="no-liked-users">
+      <p>
+        You haven't liked anyone yet. Go to the Members page to discover people!
+      </p>
+      <button class="primary-button" routerLink="/members">
+        Browse Members
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Window -->
+  <div *ngIf="showChat && selectedConversation" class="chat-window">
+    <div class="chat-header">
+      <button class="back-button" (click)="backToConversations()">
+        ← Back
+      </button>
+      <h2>{{ selectedConversation.otherUsername }}</h2>
+    </div>
+
+    <div class="messages-list">
+      <div
+        *ngFor="let message of messages"
+        class="message-item"
+        [ngClass]="{
+          'my-message': isMyMessage(message),
+          'other-message': !isMyMessage(message)
+        }"
+      >
+        <div class="message-content">
+          <p>{{ message.content }}</p>
+          <span class="message-time">{{
+            formatTime(message.messageSent)
+          }}</span>
+        </div>
+      </div>
+
+      <!-- Typing indicator -->
+      <div *ngIf="isTyping" class="typing-indicator">
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <span class="typing-text"
+          >{{ selectedConversation.otherUsername }} is typing...</span
+        >
+      </div>
+    </div>
+
+    <div class="message-input">
+      <input
+        type="text"
+        [(ngModel)]="newMessageContent"
+        placeholder="Type your message..."
+        (keyup.enter)="sendMessage()"
+        (input)="onMessageInput()"
+        class="message-text-input"
+      />
+      <button (click)="sendMessage()" class="send-button">Send</button>
+    </div>
+  </div>
+</div>

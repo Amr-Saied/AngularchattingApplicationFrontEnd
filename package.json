@@ -28,6 +28,7 @@
     "@angular/forms": "^20.0.0",
     "@angular/platform-browser": "^20.0.0",
     "@angular/router": "^20.0.0",
+    "@microsoft/signalr": "^8.0.7",
     "bootstrap": "^5.3.7",
     "font-awesome": "^4.7.0",
     "ng-gallery": "^12.0.0",

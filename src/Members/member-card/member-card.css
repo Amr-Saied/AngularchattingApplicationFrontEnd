@@ -94,3 +94,71 @@
 .member-actions .btn-primary:hover {
   background: #0056b3;
 }
+
+/* Like functionality styles */
+.like-count {
+  margin: 5px 0;
+  text-align: center;
+}
+
+.like-count small {
+  font-size: 0.8rem;
+}
+
+.like-btn {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.like-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.like-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+/* Spinner for loading state */
+.spinner-border-sm {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/* Member actions spacing */
+.member-actions {
+  gap: 8px !important;
+}
+
+.member-actions .btn {
+  min-width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Responsive design for like buttons */
+@media (max-width: 576px) {
+  .member-actions {
+    gap: 5px !important;
+  }
+
+  .member-actions .btn {
+    min-width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+}
