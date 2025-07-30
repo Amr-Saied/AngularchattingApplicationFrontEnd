@@ -29,7 +29,7 @@ export class MemberList implements OnInit, OnDestroy {
 
   members: Member[] = [];
   isLoaded = false;
-  paginationParams: PaginationParams = { pageNumber: 1, pageSize: 4 };
+  paginationParams: PaginationParams = { pageNumber: 1, pageSize: 8 };
   totalPages = 0;
   totalCount = 0;
   searchTerm = '';

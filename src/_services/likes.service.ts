@@ -4,6 +4,8 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 import { LikeCounts } from '../_models/LikeCounts';
+import { Member } from '../_models/member';
+import { PagedResult } from '../_models/pagination';
 
 @Injectable({
   providedIn: 'root',
@@ -103,6 +105,37 @@ export class LikesService {
           likedByCount: response.likedByCount,
         })),
         catchError(() => of({ likesCount: 0, likedByCount: 0 }))
+      );
+  }
+
+  // Get users that the current user has liked
+  getMyLikes(): Observable<Member[]> {
+    return this.http
+      .get<Member[]>(`${this.baseUrl}/my-likes`)
+      .pipe(catchError(() => of([])));
+  }
+
+  // Get paginated users that the current user has liked
+  getMyLikesPaged(
+    pageNumber: number,
+    pageSize: number
+  ): Observable<PagedResult<Member>> {
+    return this.http
+      .get<PagedResult<Member>>(
+        `${this.baseUrl}/my-likes-paged?pageNumber=${pageNumber}&pageSize=${pageSize}`
+      )
+      .pipe(
+        catchError(() =>
+          of({
+            items: [],
+            totalCount: 0,
+            pageNumber: pageNumber,
+            pageSize: pageSize,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          })
+        )
       );
   }
 

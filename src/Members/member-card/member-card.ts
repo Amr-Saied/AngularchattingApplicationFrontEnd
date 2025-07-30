@@ -7,6 +7,7 @@ import { MemberService } from '../../_services/member.service';
 import { LikesService } from '../../_services/likes.service';
 import { ToastrService } from 'ngx-toastr';
 import { AccountService } from '../../_services/account.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-member-card',
@@ -28,7 +29,8 @@ export class MemberCard implements OnInit {
     private memberService: MemberService,
     private likesService: LikesService,
     private toastr: ToastrService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -152,5 +154,20 @@ export class MemberCard implements OnInit {
         },
       });
     }
+  }
+
+  sendMessage() {
+    if (this.isOwnProfile) {
+      this.toastr.warning('You cannot message yourself');
+      return;
+    }
+
+    // Navigate to messages page with the user ID
+    this.router.navigate(['/messages'], {
+      queryParams: {
+        userId: this.member.id,
+        username: this.member.userName,
+      },
+    });
   }
 }

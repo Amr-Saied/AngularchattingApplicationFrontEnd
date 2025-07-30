@@ -28,10 +28,10 @@
           </li>
         </ng-template>
         <li class="nav-item" *ngIf="loggedIn; else empty2">
-          <a class="nav-link" routerLink="/lists">Lists</a>
+          <a class="nav-link" routerLink="/lists">Favourites</a>
         </li>
         <ng-template #empty2>
-          <li class="nav-item invisible"><a class="nav-link">Lists</a></li>
+          <li class="nav-item invisible"><a class="nav-link">Favourites</a></li>
         </ng-template>
         <li class="nav-item" *ngIf="loggedIn; else empty3">
           <a class="nav-link" routerLink="/messages">Messages</a>

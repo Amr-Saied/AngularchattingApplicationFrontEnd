@@ -46,7 +46,12 @@
         <i class="far fa-heart" *ngIf="!isLiked"></i>
         <span class="spinner-border spinner-border-sm" *ngIf="loading"></span>
       </button>
-      <button class="btn btn-outline-secondary btn-xs" title="Message">
+      <button
+        class="btn btn-outline-secondary btn-xs"
+        title="Message"
+        (click)="sendMessage()"
+        [disabled]="isOwnProfile"
+      >
         <i class="far fa-envelope"></i>
       </button>
     </div>
