@@ -1,7 +1,13 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+
 import { MessageService } from '../_services/message.service';
 import { ConversationDto } from '../_models/conversation';
 import { MessageDto } from '../_models/message';
@@ -11,6 +17,7 @@ import { SignalRService } from '../_services/signalr.service';
 import { AccountService } from '../_services/account.service';
 import { DefaultPhotoService } from '../_services/default-photo.service';
 import { TokenService } from '../_services/token.service';
+import { EMOJI_LIST } from '../_data/emoji-data';
 
 @Component({
   selector: 'app-messages',
@@ -24,11 +31,14 @@ export class Messages implements OnInit {
   likedUsers: Member[] = [];
   selectedConversation: ConversationDto | null = null;
   newMessageContent: string = '';
-  loading = false;
+  selectedEmoji: string = '';
+  showEmojiPicker = false;
+  emojis = EMOJI_LIST;
   showChat = false;
   showLikedUsers = false;
   isTyping = false;
   typingTimeout: any;
+  onlineUsers: number[] = [];
 
   constructor(
     private messageService: MessageService,
@@ -43,8 +53,18 @@ export class Messages implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Initialize SignalR connection
-    this.initializeSignalR();
+    // Wait for SignalR connection and then setup handlers
+    this.signalRService.getConnectionStatus().subscribe((isConnected) => {
+      if (isConnected) {
+        this.setupSignalRHandlers();
+      }
+    });
+
+    // Subscribe to online users updates
+    this.signalRService.getOnlineUsers().subscribe((users) => {
+      this.onlineUsers = users;
+      this.cdr.detectChanges();
+    });
 
     // Check if we have query parameters for direct chat
     this.route.queryParams.subscribe((params) => {
@@ -73,125 +93,155 @@ export class Messages implements OnInit {
     });
   }
 
-  private initializeSignalR() {
-    // Get token from centralized service
-    const token = this.tokenService.getToken();
-    if (token) {
-      this.signalRService
-        .startConnection(token)
-        .then(() => {
-          console.log('SignalR connected successfully');
+  // SignalR is now handled globally in App component
+  // We only setup local handlers for this component
 
-          // Set up SignalR event handlers
-          this.setupSignalRHandlers();
+  private isDuplicateMessage(message: any): boolean {
+    // Handle both SignalR format (capital properties) and HTTP format (lowercase)
+    const messageId = message.id || message.Id;
+    const content = message.content || message.Content;
+    const senderId = message.senderId || message.SenderId;
+    const messageSent = message.messageSent || message.MessageSent;
 
-          // Join user group
-          const currentUserId = this.getCurrentUserId();
-          if (currentUserId > 0) {
-            this.signalRService.joinUserGroup(currentUserId);
-          }
-        })
-        .catch((error) => {
-          console.error('SignalR connection failed:', error);
-        });
-    }
-  }
-
-  private isDuplicateMessage(message: MessageDto): boolean {
     return this.messages.some(
       (existingMessage) =>
-        existingMessage.id === message.id ||
-        (existingMessage.senderId === message.senderId &&
-          existingMessage.content === message.content &&
+        (messageId && existingMessage.id === messageId) ||
+        (content &&
+          senderId &&
+          existingMessage.senderId === senderId &&
+          existingMessage.content === content &&
+          messageSent &&
           Math.abs(
             new Date(existingMessage.messageSent).getTime() -
-              new Date(message.messageSent).getTime()
+              new Date(messageSent).getTime()
           ) < 1000)
     );
   }
 
   private setupSignalRHandlers() {
-    // Handle receiving new messages
-    this.signalRService.onReceiveMessage((message: MessageDto) => {
-      console.log('Received real-time message:', message);
+    console.log('🔧 Setting up LOCAL SignalR handlers for messages component');
+
+    // Listen to local message updates for current conversation display
+    this.signalRService.onReceiveMessage((message: any) => {
+      if (!message) return; // Skip null initial value
+
+      console.log('📩 Processing message update locally:', message);
+
+      // Handle different message formats - some come from SignalR, some from HTTP responses
+      const currentUserId = this.getCurrentUserId();
+
+      // Check if this is a SignalR message (capital letter properties) or HTTP response (lowercase)
+      const senderId = message.SenderId || message.senderId;
+      const recipientId = message.RecipientId || message.recipientId;
+      const content = message.Content || message.content;
+      const senderName = message.SenderName || message.senderUsername;
+      const messageSent = message.MessageSent || message.messageSent;
+
+      // Skip if essential data is missing
+      if (!senderId || !recipientId || !content) {
+        console.warn('⚠️ Skipping message with missing data:', message);
+        return;
+      }
+
+      const isMyMessage = senderId === currentUserId;
 
       // Add message to current chat if it's from the same conversation and not a duplicate
       if (
         this.selectedConversation &&
-        (message.senderId === this.selectedConversation.otherUserId ||
-          message.recipientId === this.selectedConversation.otherUserId) &&
+        (senderId === this.selectedConversation.otherUserId ||
+          recipientId === this.selectedConversation.otherUserId) &&
         !this.isDuplicateMessage(message)
       ) {
-        this.messages.push(message);
+        // Convert to standard MessageDto format
+        const localMessage: MessageDto = {
+          id: message.id || message.Id || Date.now(), // Use timestamp as fallback ID
+          senderId: senderId,
+          senderUsername: senderName || 'Unknown',
+          recipientId: recipientId,
+          recipientUsername:
+            this.selectedConversation?.otherUsername || 'Unknown',
+          content: content,
+          messageSent: messageSent ? new Date(messageSent) : new Date(),
+          dateRead: undefined,
+          emoji: message.Emoji || message.emoji,
+        };
+
+        this.messages.push(localMessage);
 
         // Update conversation last message
-        if (this.selectedConversation) {
-          this.selectedConversation.lastMessage = message.content;
-          this.selectedConversation.lastMessageTime = message.messageSent;
+        this.selectedConversation.lastMessage = content;
+        this.selectedConversation.lastMessageTime = localMessage.messageSent;
+
+        if (isMyMessage) {
+          this.selectedConversation.unreadCount = 0;
         }
+
+        this.cdr.detectChanges();
+        setTimeout(() => this.scrollToBottom(), 100);
       }
 
-      // Update conversations list - use a more robust approach
-      // Only update if not already loading and not in a chat
-      if (!this.loading && !this.showChat) {
-        // Use requestAnimationFrame to ensure we're outside the current change detection cycle
+      // Update conversations list only if it's NOT my message and I'm not viewing chat
+      if (!isMyMessage && !this.showChat) {
         requestAnimationFrame(() => {
           this.loadConversations();
         });
       }
     });
 
-    // Handle message read notifications
-    this.signalRService.onMessageRead((messageId: number, userId: number) => {
-      console.log('Message read:', messageId, 'by user:', userId);
-      // Update message read status in UI
-      const message = this.messages.find((m) => m.id === messageId);
-      if (message) {
-        message.dateRead = new Date();
-        this.cdr.detectChanges(); // Force change detection for UI update
-      }
-    });
-
-    // Handle typing indicators
+    // Typing handlers (keep these local since they're UI-specific)
     this.signalRService.onUserTyping((userId: number) => {
-      console.log('User typing:', userId);
       if (
         this.selectedConversation &&
         userId === this.selectedConversation.otherUserId
       ) {
         this.isTyping = true;
-        this.cdr.detectChanges(); // Force change detection for UI update
+        this.cdr.detectChanges();
       }
     });
 
     this.signalRService.onUserStoppedTyping((userId: number) => {
-      console.log('User stopped typing:', userId);
       if (
         this.selectedConversation &&
         userId === this.selectedConversation.otherUserId
       ) {
         this.isTyping = false;
-        this.cdr.detectChanges(); // Force change detection for UI update
+        this.cdr.detectChanges();
       }
     });
+
+    // Message read handler (keep local for UI updates)
+    this.signalRService.onMessageRead((messageId: number, userId: number) => {
+      const message = this.messages.find((m) => m.id === messageId);
+      if (message) {
+        message.dateRead = new Date();
+        this.cdr.detectChanges();
+      }
+    });
+
+    console.log('✅ Local SignalR handlers setup complete');
   }
 
   loadConversations() {
-    this.loading = true;
-    this.cdr.detectChanges(); // Force change detection before async operation
-
     this.messageService.getConversations().subscribe({
       next: (conversations) => {
+        console.log('Loaded conversations:', conversations);
+        console.log('Current user ID:', this.getCurrentUserId());
+
+        // Keep one debug log for missing photos
+        conversations.forEach((conv) => {
+          if (!conv.otherUserPhotoUrl) {
+            console.log(
+              `❌ Missing photo for ${conv.otherUsername} (ID: ${conv.otherUserId})`
+            );
+          }
+        });
+
         this.conversations = conversations;
-        this.loading = false;
-        this.cdr.detectChanges(); // Force change detection after state change
         if (conversations.length === 0) {
           this.loadLikedUsers();
         }
       },
       error: () => {
-        this.loading = false;
-        this.cdr.detectChanges(); // Force change detection after state change
         this.loadLikedUsers();
       },
     });
@@ -220,8 +270,12 @@ export class Messages implements OnInit {
   }
 
   loadMessages(otherUserId: number) {
+    // Set current chat user for notification management
+    this.signalRService.setCurrentChatUser(otherUserId);
+
     this.messageService.getMessages(otherUserId).subscribe({
       next: (messages) => {
+        console.log('Current user ID in messages:', this.getCurrentUserId());
         this.messages = messages;
         // Mark messages as read - only for unread messages that aren't from current user
         messages.forEach((message) => {
@@ -242,6 +296,10 @@ export class Messages implements OnInit {
             });
           }
         });
+
+        // Auto-scroll to bottom when opening chat
+        this.cdr.detectChanges();
+        setTimeout(() => this.scrollToBottom(), 200);
       },
       error: () => {
         this.messages = [];
@@ -255,17 +313,29 @@ export class Messages implements OnInit {
     }
 
     const messageContent = this.newMessageContent.trim();
-    this.newMessageContent = ''; // Clear input immediately for better UX
+    const emojiToSend = this.selectedEmoji || undefined;
+    this.newMessageContent = '';
+    this.selectedEmoji = '';
 
     this.messageService
-      .sendMessage(this.selectedConversation.otherUserId, messageContent)
+      .sendMessage(
+        this.selectedConversation.otherUserId,
+        messageContent,
+        emojiToSend
+      )
       .subscribe({
         next: (message) => {
-          // Don't add the message here since it will come through SignalR
-          // This prevents duplicates
           console.log('Message sent successfully:', message);
 
-          // Update conversation last message
+          // Add the sent message to the chat immediately (don't wait for SignalR)
+          // Since SignalR seems to have undefined values, we'll add it directly
+          if (!this.isDuplicateMessage(message)) {
+            this.messages.push(message);
+            this.cdr.detectChanges();
+            setTimeout(() => this.scrollToBottom(), 100);
+          }
+
+          // Update conversation last message for sent messages
           if (this.selectedConversation) {
             this.selectedConversation.lastMessage = message.content;
             this.selectedConversation.lastMessageTime = message.messageSent;
@@ -278,6 +348,34 @@ export class Messages implements OnInit {
           this.newMessageContent = messageContent;
         },
       });
+  }
+
+  toggleEmojiPicker(event: Event) {
+    event.stopPropagation();
+    this.showEmojiPicker = !this.showEmojiPicker;
+    console.log('Emoji picker toggled:', this.showEmojiPicker);
+    this.cdr.detectChanges();
+  }
+
+  onEmojiPickerClick(event: Event) {
+    event.stopPropagation();
+  }
+
+  addEmoji(emoji: string) {
+    this.newMessageContent += emoji;
+    this.showEmojiPicker = false;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    const target = event.target as HTMLElement;
+    if (
+      !target.closest('.emoji-button') &&
+      !target.closest('.emoji-picker-container')
+    ) {
+      this.showEmojiPicker = false;
+    }
   }
 
   startChatWithUser(user: Member) {
@@ -297,6 +395,10 @@ export class Messages implements OnInit {
     this.showChat = false;
     this.selectedConversation = null;
     this.messages = [];
+
+    // Clear current chat user for notification management
+    this.signalRService.setCurrentChatUser(null);
+
     this.loadConversations();
   }
 
@@ -359,8 +461,8 @@ export class Messages implements OnInit {
   }
 
   ngOnDestroy() {
-    // Clean up SignalR connection
-    this.signalRService.stopConnection();
+    // Clear current chat user when leaving
+    this.signalRService.setCurrentChatUser(null);
 
     // Clear typing timeout
     if (this.typingTimeout) {
@@ -370,5 +472,20 @@ export class Messages implements OnInit {
 
   getProfileImageUrl(photoUrl: string | undefined): string {
     return this.defaultPhotoService.getProfileImageUrl(photoUrl);
+  }
+
+  isUserOnline(userId: number): boolean {
+    return this.onlineUsers.includes(userId);
+  }
+
+  private scrollToBottom(): void {
+    try {
+      const chatContainer = document.querySelector('.messages-list');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    } catch (err) {
+      console.warn('Could not scroll to bottom:', err);
+    }
   }
 }

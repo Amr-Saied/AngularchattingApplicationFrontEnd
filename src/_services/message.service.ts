@@ -44,25 +44,20 @@ export class MessageService {
     );
   }
 
-  // Send a message
-  sendMessage(recipientId: number, content: string): Observable<MessageDto> {
-    const messageDto: CreateMessageDto = {
+  sendMessage(
+    recipientId: number,
+    content: string,
+    emoji?: string
+  ): Observable<MessageDto> {
+    const messageDto: any = {
       recipientId,
       content,
     };
-
-    return this.http.post<MessageDto>(`${this.baseUrl}`, messageDto).pipe(
-      map((message) => ({
-        ...message,
-        messageSent: new Date(message.messageSent),
-        dateRead: message.dateRead ? new Date(message.dateRead) : undefined,
-      })),
-      catchError(() => {
-        throw new Error('Failed to send message');
-      })
-    );
+    if (emoji && emoji.trim() !== '') {
+      messageDto.emoji = emoji;
+    }
+    return this.http.post<MessageDto>(`${this.baseUrl}`, messageDto);
   }
-
   // Mark message as read
   markAsRead(messageId: number): Observable<boolean> {
     return this.http

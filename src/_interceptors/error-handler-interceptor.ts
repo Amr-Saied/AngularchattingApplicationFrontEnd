@@ -13,16 +13,20 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
         switch (error.status) {
           case 400:
             toastr.error(error.error?.message || 'Bad Request', 'Error 400');
+            toastr.warning('Please check your input and try again');
             break;
           case 401:
             toastr.error('Unauthorized', 'Error 401');
+            toastr.warning('Please login to continue');
             break;
           case 404:
             toastr.error('Resource not found.', 'Error 404');
+            toastr.warning('The requested page does not exist');
             router.navigateByUrl('/not-found');
             break;
           case 500:
             toastr.error('Server error', 'Error 500');
+            toastr.warning('Please try again later');
             router.navigate(['/server-error'], {
               state: { error: error.error },
             });
@@ -31,6 +35,9 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
             toastr.error(
               'An unexpected error occurred.',
               `Error ${error.status}`
+            );
+            toastr.warning(
+              'Please try again or contact support if the problem persists'
             );
         }
       }

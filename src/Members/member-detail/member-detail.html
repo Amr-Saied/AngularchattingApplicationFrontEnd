@@ -121,7 +121,13 @@
             ></span>
             {{ isLiked ? "Unlike" : "Like" }}
           </button>
-          <button class="btn btn-outline-secondary btn-lg" title="Message">
+          <button
+            class="btn btn-outline-secondary btn-lg"
+            [class.btn-secondary]="isOwnProfile"
+            [disabled]="isOwnProfile"
+            (click)="sendMessage()"
+            [title]="isOwnProfile ? 'Cannot message yourself' : 'Send message'"
+          >
             <i class="far fa-envelope"></i>
             Message
           </button>

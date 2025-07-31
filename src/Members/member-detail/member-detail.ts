@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Member } from '../../_models/member';
 import { MemberService } from '../../_services/member.service';
 import { DefaultPhotoService } from '../../_services/default-photo.service';
@@ -41,6 +41,7 @@ export class MemberDetail implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private memberService: MemberService,
     private defaultPhotoService: DefaultPhotoService,
     private likesService: LikesService,
@@ -256,5 +257,17 @@ export class MemberDetail implements OnInit {
       size: this.memberCache.size,
       keys: Array.from(this.memberCache.keys()),
     };
+  }
+
+  // Navigate to messages with this user
+  sendMessage() {
+    if (!this.member || this.isOwnProfile) return;
+
+    this.router.navigate(['/messages'], {
+      queryParams: {
+        userId: this.member.id,
+        username: this.member.knownAs || this.member.userName,
+      },
+    });
   }
 }

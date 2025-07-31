@@ -5,6 +5,7 @@ export interface MessageDto {
   recipientId: number;
   recipientUsername: string;
   content: string;
+  emoji?: string;
   messageSent: Date;
   dateRead?: Date;
 }

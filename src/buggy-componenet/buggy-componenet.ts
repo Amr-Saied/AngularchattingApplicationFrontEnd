@@ -11,7 +11,7 @@ import { environment } from '../environments/environment';
   imports: [],
 })
 export class BuggyComponenet {
-  baseUrl = environment.apiUrl + 'Buggy';
+  baseUrl = environment.apiUrl + 'Buggy/';
 
   constructor(private http: HttpClient, private router: Router) {}
 
