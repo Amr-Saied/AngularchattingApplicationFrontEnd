@@ -12,6 +12,7 @@ import { ServerErrorComponent } from './server-error.component';
 import { BuggyComponenet } from '../buggy-componenet/buggy-componenet';
 import { ProfileComponent } from './profile.component';
 import { EditProfileComponent } from './edit-profile.component';
+import { MessagesResolver } from '../_services/messages.resolver';
 
 export const routes: Routes = [
   {
@@ -37,6 +38,7 @@ export const routes: Routes = [
     path: 'messages',
     component: Messages,
     canActivate: [AuthGuard],
+    resolve: { data: MessagesResolver },
   },
   {
     path: 'lists',

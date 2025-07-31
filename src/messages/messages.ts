@@ -18,6 +18,7 @@ import { AccountService } from '../_services/account.service';
 import { DefaultPhotoService } from '../_services/default-photo.service';
 import { TokenService } from '../_services/token.service';
 import { EMOJI_LIST } from '../_data/emoji-data';
+import { MessagesResolverData } from '../_services/messages.resolver';
 
 @Component({
   selector: 'app-messages',
@@ -53,6 +54,14 @@ export class Messages implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Get pre-loaded data from resolver
+    const resolvedData: MessagesResolverData = this.route.snapshot.data['data'];
+
+    // Set the pre-loaded data
+    this.conversations = resolvedData.conversations;
+    this.likedUsers = resolvedData.likedUsers;
+    this.showLikedUsers = !resolvedData.hasConversations;
+
     // Wait for SignalR connection and then setup handlers
     this.signalRService.getConnectionStatus().subscribe((isConnected) => {
       if (isConnected) {
@@ -84,13 +93,11 @@ export class Messages implements OnInit {
         this.loadMessages(parseInt(userId));
         // Clear query parameters
         this.router.navigate([], { queryParams: {} });
-      } else {
-        // Use requestAnimationFrame to ensure we're outside the current change detection cycle
-        requestAnimationFrame(() => {
-          this.loadConversations();
-        });
       }
     });
+
+    // Force change detection after setting initial data
+    this.cdr.detectChanges();
   }
 
   // SignalR is now handled globally in App component
@@ -399,7 +406,11 @@ export class Messages implements OnInit {
     // Clear current chat user for notification management
     this.signalRService.setCurrentChatUser(null);
 
-    this.loadConversations();
+    // Only reload conversations if we don't have any cached data
+    // This maintains the performance benefit of the resolver
+    if (this.conversations.length === 0) {
+      this.loadConversations();
+    }
   }
 
   backToLikedUsers() {
