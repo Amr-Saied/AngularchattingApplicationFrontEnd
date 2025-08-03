@@ -56,7 +56,8 @@
   <div *ngIf="!showChat && showLikedUsers" class="liked-users">
     <h2>Start a Conversation</h2>
     <p class="no-conversations">
-      You don't have any conversations yet. Start chatting with people you like!
+      You don't have any conversations yet. Start chatting with people you
+      liked!
     </p>
 
     <div class="liked-users-grid">
@@ -82,7 +83,7 @@
       <p>
         You haven't liked anyone yet. Go to the Members page to discover people!
       </p>
-      <button class="primary-button" routerLink="/members">
+      <button class="primary-button" (click)="navigateToMembers()">
         Browse Members
       </button>
     </div>
@@ -106,14 +107,55 @@
           'other-message': !isMyMessage(message)
         }"
       >
+        <div class="message-avatar" *ngIf="!isMyMessage(message)">
+          <img
+            [src]="getProfileImageUrl(message.senderPhotoUrl)"
+            [alt]="message.senderUsername"
+            class="message-avatar-image"
+          />
+        </div>
+
         <div class="message-content">
           <p>
             {{ message.content }}
             <span *ngIf="message.emoji" class="emoji">{{ message.emoji }}</span>
           </p>
-          <span class="message-time">{{
-            formatTime(message.messageSent)
-          }}</span>
+          <div class="message-footer">
+            <span class="message-time">{{
+              formatTime(message.messageSent)
+            }}</span>
+
+            <!-- Read Status Indicators for My Messages -->
+            <div *ngIf="isMyMessage(message)" class="message-status">
+              <span
+                class="read-status"
+                [ngClass]="{
+                  read: message.dateRead,
+                  sent: !message.dateRead
+                }"
+                [title]="getReadStatusTitle(message)"
+              >
+                <span *ngIf="!message.dateRead">✓</span>
+                <span *ngIf="message.dateRead">✓✓</span>
+              </span>
+
+              <button
+                class="delete-message-btn"
+                (click)="deleteMessage(message.id)"
+                title="Delete message"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-avatar" *ngIf="isMyMessage(message)">
+          <img
+            [src]="getProfileImageUrl(message.senderPhotoUrl)"
+            [alt]="message.senderUsername"
+            class="message-avatar-image"
+          />
         </div>
       </div>
 

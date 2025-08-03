@@ -14,6 +14,9 @@ export class SignalRService {
   private connectionEstablished = new BehaviorSubject<boolean>(false);
   private onlineUsers = new BehaviorSubject<number[]>([]);
 
+  // Message handling
+  private messageCallbacks: ((message: MessageDto) => void)[] = [];
+
   // Notification management
   private lastNotificationTime = new Map<number, number>(); // userId -> timestamp
   private readonly NOTIFICATION_COOLDOWN = 3 * 60 * 1000; // 3 minutes
@@ -67,6 +70,11 @@ export class SignalRService {
     }
   }
 
+  get connectionState(): string {
+    if (!this.hubConnection) return 'No Connection';
+    return this.hubConnection.state;
+  }
+
   // Send typing indicator
   sendTyping(recipientId: number): void {
     if (this.hubConnection && this.connectionEstablished.value) {
@@ -117,14 +125,36 @@ export class SignalRService {
 
   // Simplified event handlers for component usage
   onReceiveMessage(callback: (message: MessageDto) => void): void {
-    if (this.hubConnection) {
-      this.hubConnection.on('ReceiveMessage', callback);
+    this.messageCallbacks.push(callback);
+  }
+
+  // Remove a specific callback (for component cleanup)
+  removeReceiveMessageCallback(callback: (message: MessageDto) => void): void {
+    const index = this.messageCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.messageCallbacks.splice(index, 1);
     }
+  }
+
+  // Clear all callbacks (for testing/cleanup)
+  clearAllCallbacks(): void {
+    this.messageCallbacks = [];
   }
 
   onMessageRead(callback: (messageId: number, userId: number) => void): void {
     if (this.hubConnection) {
-      this.hubConnection.on('MessageRead', callback);
+      this.hubConnection.on(
+        'MessageRead',
+        (messageId: number, userId: number) => {
+          callback(messageId, userId);
+        }
+      );
+    }
+  }
+
+  onMessageDeleted(callback: (messageId: number) => void): void {
+    if (this.hubConnection) {
+      this.hubConnection.on('MessageDeleted', callback);
     }
   }
 
@@ -175,13 +205,10 @@ export class SignalRService {
     content: string,
     senderId: number
   ): void {
-    const truncatedContent =
-      content.length > 50 ? content.substring(0, 50) + '...' : content;
-
     try {
       const toastRef = this.toastr.info(
-        truncatedContent,
-        `New message from ${senderName}`,
+        `${senderName} sent you a new message`,
+        `New Message`,
         {
           timeOut: 5000,
           closeButton: true,
@@ -201,7 +228,7 @@ export class SignalRService {
         });
       }
     } catch (error) {
-      console.error('Error creating toast notification:', error);
+      // Silent error handling for production
     }
   }
 
@@ -211,15 +238,24 @@ export class SignalRService {
       return;
     }
 
-    // Remove any existing handlers first to prevent duplicates
-    this.hubConnection.off('ReceiveMessage');
+    // Remove any existing handlers first to prevent duplicates (but NOT ReceiveMessage)
     this.hubConnection.off('UserOnline');
     this.hubConnection.off('UserOffline');
     this.hubConnection.off('OnlineUsersUpdate');
 
-    // Global message handler with notifications
+    // Global message handler that forwards to all registered callbacks AND handles notifications
+    this.hubConnection.off('ReceiveMessage'); // Remove only to set up the new comprehensive handler
     this.hubConnection.on('ReceiveMessage', (message: any) => {
-      // Check and show notification for messages
+      // Forward message to all registered component callbacks
+      this.messageCallbacks.forEach((callback) => {
+        try {
+          callback(message);
+        } catch (error) {
+          // Silent error handling for production
+        }
+      });
+
+      // Handle notifications
       this.checkAndShowNotification(message);
     });
 

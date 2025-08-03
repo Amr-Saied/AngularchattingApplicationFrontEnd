@@ -439,8 +439,31 @@
 /* Message Positioning - FIXED */
 .message-item {
   display: flex;
+  align-items: flex-end;
   margin-bottom: 10px;
   width: 100%;
+  gap: 8px;
+}
+
+/* Message Avatar Styles */
+.message-avatar {
+  flex-shrink: 0;
+}
+
+.message-avatar-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e9ecef;
+}
+
+.message-item.my-message .message-avatar-image {
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.message-item.other-message .message-avatar-image {
+  border-color: #e9ecef;
 }
 
 /* YOUR MESSAGES - RIGHT SIDE */
@@ -452,7 +475,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 18px 18px 4px 18px;
-  max-width: 70%;
+  max-width: calc(70% - 40px); /* Account for avatar space */
   margin-left: auto;
   margin-right: 0;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
@@ -467,7 +490,7 @@
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   color: #495057;
   border-radius: 18px 18px 18px 4px;
-  max-width: 70%;
+  max-width: calc(70% - 40px); /* Account for avatar space */
   margin-right: auto;
   margin-left: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -483,9 +506,81 @@
   word-wrap: break-word;
 }
 
+.message-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.read-status {
+  font-size: 12px;
+  transition: color 0.2s ease;
+}
+
+.read-status.sent {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 0.7;
+}
+
+.read-status.read {
+  color: #4caf50;
+  opacity: 1;
+}
+
+.message-item.other-message .read-status.sent {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.message-item.other-message .read-status.read {
+  color: #4caf50;
+}
+
 .message-time {
   font-size: 11px;
   opacity: 0.7;
+}
+
+.delete-message-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.delete-message-btn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.message-item.other-message .delete-message-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.manual-read-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.manual-read-btn:hover {
+  opacity: 1;
+  background-color: rgba(76, 175, 80, 0.2);
 }
 
 .message-input {

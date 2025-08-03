@@ -19,6 +19,7 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
 import { TokenService } from '../_services/token.service';
 import { EMOJI_LIST } from '../_data/emoji-data';
 import { MessagesResolverData } from '../_services/messages.resolver';
+import { NavigationService } from '../_services/navigation.service';
 
 @Component({
   selector: 'app-messages',
@@ -40,6 +41,10 @@ export class Messages implements OnInit {
   isTyping = false;
   typingTimeout: any;
   onlineUsers: number[] = [];
+  private signalRHandlersSetup = false;
+  private handlerRegistrationCount = 0;
+  private bufferedReadEvents: { messageId: number; userId: number }[] = [];
+  private messageReceiveCallback?: (message: any) => void;
 
   constructor(
     private messageService: MessageService,
@@ -50,7 +55,8 @@ export class Messages implements OnInit {
     private accountService: AccountService,
     private defaultPhotoService: DefaultPhotoService,
     private tokenService: TokenService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private navigationService: NavigationService
   ) {}
 
   ngOnInit() {
@@ -64,8 +70,9 @@ export class Messages implements OnInit {
 
     // Wait for SignalR connection and then setup handlers
     this.signalRService.getConnectionStatus().subscribe((isConnected) => {
-      if (isConnected) {
+      if (isConnected && !this.signalRHandlersSetup) {
         this.setupSignalRHandlers();
+        this.signalRHandlersSetup = true;
       }
     });
 
@@ -126,13 +133,9 @@ export class Messages implements OnInit {
   }
 
   private setupSignalRHandlers() {
-    console.log('🔧 Setting up LOCAL SignalR handlers for messages component');
-
     // Listen to local message updates for current conversation display
-    this.signalRService.onReceiveMessage((message: any) => {
+    this.messageReceiveCallback = (message: any) => {
       if (!message) return; // Skip null initial value
-
-      console.log('📩 Processing message update locally:', message);
 
       // Handle different message formats - some come from SignalR, some from HTTP responses
       const currentUserId = this.getCurrentUserId();
@@ -146,7 +149,6 @@ export class Messages implements OnInit {
 
       // Skip if essential data is missing
       if (!senderId || !recipientId || !content) {
-        console.warn('⚠️ Skipping message with missing data:', message);
         return;
       }
 
@@ -164,12 +166,15 @@ export class Messages implements OnInit {
           id: message.id || message.Id || Date.now(), // Use timestamp as fallback ID
           senderId: senderId,
           senderUsername: senderName || 'Unknown',
+          senderPhotoUrl: message.SenderPhotoUrl || message.senderPhotoUrl,
           recipientId: recipientId,
           recipientUsername:
             this.selectedConversation?.otherUsername || 'Unknown',
+          recipientPhotoUrl:
+            message.RecipientPhotoUrl || message.recipientPhotoUrl,
           content: content,
           messageSent: messageSent ? new Date(messageSent) : new Date(),
-          dateRead: undefined,
+          dateRead: undefined, // New messages via SignalR should always start as unread
           emoji: message.Emoji || message.emoji,
         };
 
@@ -181,7 +186,19 @@ export class Messages implements OnInit {
 
         if (isMyMessage) {
           this.selectedConversation.unreadCount = 0;
+        } else {
+          // Auto-mark as read if user is actively viewing this chat
+          if (this.showChat && document.hasFocus() && !document.hidden) {
+            setTimeout(() => {
+              this.autoMarkAsRead(localMessage.id);
+            }, 1000); // Small delay to ensure user sees the message
+          }
         }
+
+        // Check if there are any buffered read events for newly arrived messages
+        setTimeout(() => {
+          this.replayBufferedReadEvents();
+        }, 50); // Quick replay for new messages
 
         this.cdr.detectChanges();
         setTimeout(() => this.scrollToBottom(), 100);
@@ -193,7 +210,10 @@ export class Messages implements OnInit {
           this.loadConversations();
         });
       }
-    });
+    };
+
+    // Register the callback with SignalR service
+    this.signalRService.onReceiveMessage(this.messageReceiveCallback);
 
     // Typing handlers (keep these local since they're UI-specific)
     this.signalRService.onUserTyping((userId: number) => {
@@ -217,29 +237,24 @@ export class Messages implements OnInit {
     });
 
     // Message read handler (keep local for UI updates)
+    this.handlerRegistrationCount++;
     this.signalRService.onMessageRead((messageId: number, userId: number) => {
-      const message = this.messages.find((m) => m.id === messageId);
-      if (message) {
-        message.dateRead = new Date();
-        this.cdr.detectChanges();
-      }
+      this.processMessageReadEvent(messageId, userId);
     });
 
-    console.log('✅ Local SignalR handlers setup complete');
+    // Message deleted handler (real-time deletion)
+    this.signalRService.onMessageDeleted((messageId: number) => {
+      this.messages = this.messages.filter((m) => m.id !== messageId);
+      this.cdr.detectChanges();
+    });
   }
 
   loadConversations() {
     this.messageService.getConversations().subscribe({
       next: (conversations) => {
-        console.log('Loaded conversations:', conversations);
-        console.log('Current user ID:', this.getCurrentUserId());
-
         // Keep one debug log for missing photos
         conversations.forEach((conv) => {
           if (!conv.otherUserPhotoUrl) {
-            console.log(
-              `❌ Missing photo for ${conv.otherUsername} (ID: ${conv.otherUserId})`
-            );
           }
         });
 
@@ -282,27 +297,27 @@ export class Messages implements OnInit {
 
     this.messageService.getMessages(otherUserId).subscribe({
       next: (messages) => {
-        console.log('Current user ID in messages:', this.getCurrentUserId());
         this.messages = messages;
-        // Mark messages as read - only for unread messages that aren't from current user
-        messages.forEach((message) => {
-          if (
-            !message.dateRead &&
-            message.senderId !== this.getCurrentUserId() &&
-            message.recipientId === this.getCurrentUserId()
-          ) {
-            this.messageService.markAsRead(message.id).subscribe({
-              next: () => {
-                // Successfully marked as read
-                message.dateRead = new Date();
-              },
-              error: (error) => {
-                console.warn('Failed to mark message as read:', error);
-                // Don't break the UI if marking as read fails
-              },
-            });
-          }
-        });
+
+        // Find unread messages that I received
+        const unreadMessages = messages.filter(
+          (m) =>
+            !m.dateRead &&
+            m.senderId !== this.getCurrentUserId() &&
+            m.recipientId === this.getCurrentUserId()
+        );
+
+        // Replay any buffered read events now that messages are loaded
+        setTimeout(() => {
+          this.replayBufferedReadEvents();
+        }, 100);
+
+        // Auto-mark unread messages as read when opening chat
+        if (unreadMessages.length > 0) {
+          unreadMessages.forEach((message) => {
+            this.autoMarkAsRead(message.id);
+          });
+        }
 
         // Auto-scroll to bottom when opening chat
         this.cdr.detectChanges();
@@ -332,8 +347,6 @@ export class Messages implements OnInit {
       )
       .subscribe({
         next: (message) => {
-          console.log('Message sent successfully:', message);
-
           // Add the sent message to the chat immediately (don't wait for SignalR)
           // Since SignalR seems to have undefined values, we'll add it directly
           if (!this.isDuplicateMessage(message)) {
@@ -350,7 +363,6 @@ export class Messages implements OnInit {
           }
         },
         error: () => {
-          console.error('Failed to send message');
           // Restore the message content if sending failed
           this.newMessageContent = messageContent;
         },
@@ -360,7 +372,6 @@ export class Messages implements OnInit {
   toggleEmojiPicker(event: Event) {
     event.stopPropagation();
     this.showEmojiPicker = !this.showEmojiPicker;
-    console.log('Emoji picker toggled:', this.showEmojiPicker);
     this.cdr.detectChanges();
   }
 
@@ -399,6 +410,19 @@ export class Messages implements OnInit {
   }
 
   backToConversations() {
+    // Check if there's a previous page to navigate back to
+    const previousPage = this.navigationService.getPreviousPage();
+
+    if (
+      previousPage &&
+      (previousPage === '/members' || previousPage === '/lists')
+    ) {
+      // Navigate back to the previous page (members list or favorites)
+      this.navigationService.navigateBack();
+      return;
+    }
+
+    // Default behavior: stay in messages but show conversations list
     this.showChat = false;
     this.selectedConversation = null;
     this.messages = [];
@@ -471,14 +495,52 @@ export class Messages implements OnInit {
     }
   }
 
+  @HostListener('window:focus')
+  onWindowFocus() {
+    if (this.showChat) {
+      this.checkAndMarkVisibleMessages();
+    }
+  }
+
+  checkAndMarkVisibleMessages() {
+    // Find unread messages that I received
+    const unreadMessages = this.messages.filter(
+      (m) =>
+        !m.dateRead &&
+        m.senderId !== this.getCurrentUserId() &&
+        m.recipientId === this.getCurrentUserId()
+    );
+
+    if (unreadMessages.length > 0) {
+      unreadMessages.forEach((message) => {
+        // Small delay to stagger the API calls
+        setTimeout(() => {
+          this.autoMarkAsRead(message.id);
+        }, Math.random() * 500);
+      });
+    }
+  }
+
   ngOnDestroy() {
     // Clear current chat user when leaving
     this.signalRService.setCurrentChatUser(null);
+
+    // Remove the message receive callback to prevent memory leaks
+    if (this.messageReceiveCallback) {
+      this.signalRService.removeReceiveMessageCallback(
+        this.messageReceiveCallback
+      );
+    }
 
     // Clear typing timeout
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
     }
+
+    // Reset SignalR handlers flag and clear buffers
+    this.signalRHandlersSetup = false;
+    this.handlerRegistrationCount = 0; // Reset counter
+    this.bufferedReadEvents = []; // Clear any pending read events
   }
 
   getProfileImageUrl(photoUrl: string | undefined): string {
@@ -489,6 +551,161 @@ export class Messages implements OnInit {
     return this.onlineUsers.includes(userId);
   }
 
+  getReadStatusTitle(message: MessageDto): string {
+    if (message.dateRead) {
+      const readTime = this.formatDateTime(message.dateRead);
+      return `Read at ${readTime}`;
+    } else {
+      const sentTime = this.formatDateTime(message.messageSent);
+      return `Sent at ${sentTime}`;
+    }
+  }
+
+  formatDateTime(date: Date): string {
+    const messageDate = new Date(date);
+    const today = new Date();
+
+    // Check if it's today
+    if (messageDate.toDateString() === today.toDateString()) {
+      return messageDate.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    // Check if it's yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (messageDate.toDateString() === yesterday.toDateString()) {
+      return `Yesterday ${messageDate.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`;
+    }
+
+    // For older dates, show full date and time
+    return messageDate.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  private parseNullableDate(dateValue: any): Date | undefined {
+    if (!dateValue) {
+      return undefined;
+    }
+
+    // Handle different types of date values
+    if (typeof dateValue === 'string') {
+      // Check for empty string or null-like strings
+      if (dateValue.trim() === '' || dateValue.toLowerCase() === 'null') {
+        return undefined;
+      }
+    }
+
+    try {
+      const parsed = new Date(dateValue);
+      // Check if the date is valid
+      if (isNaN(parsed.getTime())) {
+        return undefined;
+      }
+      return parsed;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private processMessageReadEvent(messageId: number, userId: number) {
+    const message = this.messages.find((m) => m.id === messageId);
+
+    if (message) {
+      message.dateRead = new Date();
+      this.cdr.detectChanges();
+    } else {
+      // Buffer the event for later processing when messages are loaded
+      const alreadyBuffered = this.bufferedReadEvents.some(
+        (event) => event.messageId === messageId && event.userId === userId
+      );
+
+      if (!alreadyBuffered) {
+        this.bufferedReadEvents.push({ messageId, userId });
+      }
+    }
+  }
+
+  private replayBufferedReadEvents() {
+    if (this.bufferedReadEvents.length === 0) {
+      return;
+    }
+
+    // Process buffered events
+    const eventsToReplay = [...this.bufferedReadEvents]; // Copy to avoid modification during iteration
+    this.bufferedReadEvents = []; // Clear buffer
+
+    eventsToReplay.forEach(({ messageId, userId }) => {
+      this.processMessageReadEvent(messageId, userId);
+    });
+  }
+
+  autoMarkAsRead(messageId: number) {
+    this.performMarkAsRead(messageId, 'auto');
+  }
+
+  private performMarkAsRead(messageId: number, source: 'manual' | 'auto') {
+    // Check if message is already read
+    const message = this.messages.find((m) => m.id === messageId);
+    if (message && message.dateRead) {
+      return;
+    }
+
+    this.messageService.markAsRead(messageId).subscribe({
+      next: (success) => {
+        // Find and update the message locally
+        if (message) {
+          message.dateRead = new Date();
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error) => {
+        // Silent error handling for production
+      },
+    });
+  }
+
+  deleteMessage(messageId: number) {
+    if (!confirm('Are you sure you want to delete this message?')) {
+      return;
+    }
+
+    this.messageService.deleteMessage(messageId).subscribe({
+      next: (success) => {
+        if (success) {
+          // Remove message from local UI immediately
+          this.messages = this.messages.filter((m) => m.id !== messageId);
+          this.cdr.detectChanges();
+
+          // Update conversation last message if this was the latest message
+          if (this.selectedConversation && this.messages.length > 0) {
+            const lastMessage = this.messages[this.messages.length - 1];
+            this.selectedConversation.lastMessage = lastMessage.content;
+            this.selectedConversation.lastMessageTime = lastMessage.messageSent;
+          } else if (this.selectedConversation && this.messages.length === 0) {
+            this.selectedConversation.lastMessage = '';
+          }
+        }
+      },
+      error: (error) => {
+        // Silent error handling for production
+      },
+    });
+  }
+
+  navigateToMembers() {
+    this.router.navigate(['/members']);
+  }
+
   private scrollToBottom(): void {
     try {
       const chatContainer = document.querySelector('.messages-list');
@@ -496,7 +713,7 @@ export class Messages implements OnInit {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     } catch (err) {
-      console.warn('Could not scroll to bottom:', err);
+      // Silent error handling for production
     }
   }
 }
