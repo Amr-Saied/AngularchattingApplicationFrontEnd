@@ -1,4 +1,4 @@
-# RejectSilence Frontend
+# ChatBridge Frontend
 
 A social media chatting application built with Angular.
 
