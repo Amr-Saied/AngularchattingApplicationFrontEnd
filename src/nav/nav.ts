@@ -47,6 +47,7 @@ export class Nav implements OnInit {
       this.loggedIn = isLoggedIn;
       if (isLoggedIn) {
         this.loadCurrentUser();
+        // Remove redundant ban check - account service handles this
       } else {
         this.currentUser = null;
       }
@@ -69,6 +70,9 @@ export class Nav implements OnInit {
 
   login() {
     if (this.loginForm.valid) {
+      // Clear any previous error messages
+      this.toastr.clear();
+
       const model = {
         Username: this.loginForm.get('username')?.value,
         Password: this.loginForm.get('password')?.value,
@@ -90,7 +94,18 @@ export class Nav implements OnInit {
           }
 
           // Show success message
-          this.toastr.success(`Welcome back, ${response.username}!`);
+          this.toastr.success(
+            `Welcome back, ${response.username}!`,
+            'Login Successful',
+            {
+              timeOut: 6000,
+              closeButton: true,
+              progressBar: true,
+            }
+          );
+
+          // Clear the login form
+          this.loginForm.reset();
 
           // Redirect based on user role
           if (response.role === 'Admin') {
@@ -101,7 +116,27 @@ export class Nav implements OnInit {
         },
         error: (error) => {
           console.log(error);
-          this.toastr.error('Login failed. Please check your credentials.');
+
+          // Check if user is banned - let account service handle this
+          if (error.error?.error === 'USER_BANNED') {
+            // Use account service to check ban status immediately and show proper notification
+            // This will use our own date formatting instead of the backend's pre-formatted message
+            this.accountService.checkBanStatusImmediately();
+            this.router.navigate(['/']);
+          } else {
+            this.toastr.error(
+              'Login failed. Please check your credentials.',
+              'Login Failed',
+              {
+                timeOut: 8000,
+                closeButton: true,
+                progressBar: true,
+              }
+            );
+          }
+
+          // Reset the login form
+          this.loginForm.reset();
         },
       });
     }
@@ -112,7 +147,11 @@ export class Nav implements OnInit {
     this.loggedIn = false;
     this.currentUser = null;
     this.router.navigate(['/home']);
-    this.toastr.success('Logged out successfully!');
+    this.toastr.success('Logged out successfully!', 'Logout Successful', {
+      timeOut: 5000,
+      closeButton: true,
+      progressBar: true,
+    });
   }
 
   getLoggedUsername(): string {

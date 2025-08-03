@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MemberCard } from '../Members/member-card/member-card';
@@ -9,6 +15,8 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 import { PaginationParams } from '../_models/pagination';
 import { PagedResult } from '../_models/pagination';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-lists',
@@ -22,12 +30,20 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './lists.html',
   styleUrl: './lists.css',
 })
-export class Lists implements OnInit {
+export class Lists implements OnInit, OnDestroy {
+  @ViewChild('searchInput', { static: false }) searchInput!: ElementRef;
+
   likedMembers: Member[] = [];
+  allLikedMembers: Member[] = []; // Store all liked members for search filtering
+  filteredMembers: Member[] = []; // Store filtered members for display
   isLoaded = false;
   paginationParams: PaginationParams = { pageNumber: 1, pageSize: 6 };
   totalPages = 0;
   totalCount = 0;
+  searchTerm = '';
+  isSearching = false;
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   constructor(
     private likesService: LikesService,
@@ -35,21 +51,88 @@ export class Lists implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.clearSearchAndLoadAll();
+    this.setupSearch();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setupSearch() {
+    this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((searchTerm) => {
+        this.searchTerm = searchTerm;
+        this.performSearch();
+      });
+  }
+
+  onSearchInput(event: any) {
+    const searchTerm = event.target.value;
+    this.searchSubject.next(searchTerm);
+  }
+
+  // Method to clear search and load all members
+  clearSearchAndLoadAll() {
+    this.searchTerm = '';
+    this.isSearching = false;
+    this.paginationParams.pageNumber = 1; // Reset to first page
+
+    // Clear the search input field if it exists
+    if (this.searchInput && this.searchInput.nativeElement) {
+      this.searchInput.nativeElement.value = '';
+    }
+
     this.loadLikedMembers();
+  }
+
+  performSearch() {
+    if (!this.searchTerm.trim()) {
+      // If no search term, show paginated results
+      this.updatePaginatedDisplay();
+      return;
+    }
+
+    this.isSearching = true;
+
+    // Filter members based on search term (client-side search)
+    const searchTermLower = this.searchTerm.toLowerCase();
+    this.filteredMembers = this.allLikedMembers.filter(
+      (member) =>
+        member.knownAs?.toLowerCase().includes(searchTermLower) ||
+        member.userName?.toLowerCase().includes(searchTermLower) ||
+        member.city?.toLowerCase().includes(searchTermLower) ||
+        member.country?.toLowerCase().includes(searchTermLower)
+    );
+
+    this.likedMembers = this.filteredMembers;
+    this.isSearching = false;
+
+    if (this.filteredMembers.length === 0) {
+      this.toastr.info('No favourites found matching your search criteria.');
+    }
   }
 
   loadLikedMembers() {
     this.isLoaded = false;
+
+    // Load all liked members first (using large page size to get all)
     this.likesService
-      .getMyLikesPaged(
-        this.paginationParams.pageNumber,
-        this.paginationParams.pageSize
-      )
+      .getMyLikesPaged(1, 1000) // Get all liked members
       .subscribe({
         next: (response: PagedResult<Member>) => {
-          this.likedMembers = response.items;
+          this.allLikedMembers = response.items;
           this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
+
+          // Calculate pagination for the actual page size
+          this.totalPages = Math.ceil(
+            this.totalCount / this.paginationParams.pageSize
+          );
+
+          // Show paginated results
+          this.updatePaginatedDisplay();
           this.isLoaded = true;
 
           if (response.totalCount === 0) {
@@ -65,12 +148,26 @@ export class Lists implements OnInit {
       });
   }
 
+  updatePaginatedDisplay() {
+    const startIndex =
+      (this.paginationParams.pageNumber - 1) * this.paginationParams.pageSize;
+    const endIndex = startIndex + this.paginationParams.pageSize;
+    this.likedMembers = this.allLikedMembers.slice(startIndex, endIndex);
+  }
+
   onPageChanged(pageNumber: number) {
+    if (this.searchTerm.trim()) {
+      return; // Don't paginate when searching
+    }
     this.paginationParams.pageNumber = pageNumber;
-    this.loadLikedMembers();
+    this.updatePaginatedDisplay();
   }
 
   getPageNumbers(): number[] {
+    if (this.searchTerm.trim()) {
+      return []; // Don't show pagination when searching
+    }
+
     const pages: number[] = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, this.paginationParams.pageNumber - 2);

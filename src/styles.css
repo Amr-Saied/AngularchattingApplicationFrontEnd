@@ -278,18 +278,44 @@ textarea.form-control {
 }
 
 .toast {
-  border-radius: 12px !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
   font-family: inherit;
-  font-size: 1.15rem;
-  padding: 18px 32px !important;
-  min-width: 320px;
-  max-width: 400px;
+  padding: 20px 24px !important;
+  min-width: 350px;
+  max-width: 450px;
   color: #fff !important;
   background: var(--main-gradient) !important;
   border: none !important;
   margin-bottom: 1rem !important;
   pointer-events: auto;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  line-height: 1.5 !important;
+  position: relative !important;
+  animation-duration: 0.5s !important;
+  animation-fill-mode: both !important;
+}
+
+/* Extended timeout for all toastr notifications */
+.toast,
+#toast-container > div {
+  animation-delay: 0s !important;
+  animation-duration: 0.5s !important;
+}
+
+/* Longer timeout for important notifications */
+.toast.toast-error,
+#toast-container > div.toast-error {
+  animation-duration: 0.8s !important;
+}
+
+.toast.toast-warning,
+#toast-container > div.toast-warning {
+  animation-duration: 0.7s !important;
 }
 
 .toast-success {
@@ -314,18 +340,63 @@ textarea.form-control {
 
 .toast .toast-message {
   color: inherit !important;
-  font-size: 1.15rem;
   line-height: 1.5;
+  width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* Toastr Title (Message Type) */
+.toast .toast-title {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  color: inherit !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Toastr Content (Actual Message) */
+.toast .toast-content {
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+  opacity: 0.95 !important;
 }
 
 .toast .toast-close-button {
   color: #fff !important;
   opacity: 0.8;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   transition: opacity 0.2s;
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  z-index: 10 !important;
 }
+
 .toast .toast-close-button:hover {
   opacity: 1;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Stronger Toastr Overrides for Modern Look */
@@ -335,21 +406,23 @@ textarea.form-control {
 .toast-success,
 .toast-info,
 .toast-warning {
-  border-radius: 14px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18) !important;
-  padding: 22px 36px !important;
-  font-size: 1.18rem !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+  padding: 20px 24px !important;
   font-weight: 500 !important;
-  min-width: 340px !important;
-  max-width: 420px !important;
+  min-width: 350px !important;
+  max-width: 450px !important;
   margin-bottom: 1.2rem !important;
   display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  line-height: 1.6 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  line-height: 1.5 !important;
   border: none !important;
   opacity: 0.98 !important;
+  backdrop-filter: blur(10px) !important;
+  position: relative !important;
 }
 
 #toast-container > .toast-error,
@@ -376,18 +449,124 @@ textarea.form-control {
   color: #212529 !important;
 }
 
+#toast-container > div .toast-message,
+.toast .toast-message {
+  color: inherit !important;
+  line-height: 1.5 !important;
+  width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding-right: 30px !important;
+}
+
+/* Toastr Title (Message Type) */
+#toast-container > div .toast-title,
+.toast .toast-title {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  color: inherit !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Toastr Content (Actual Message) */
+#toast-container > div .toast-content,
+.toast .toast-content {
+  font-size: 1rem !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+  opacity: 0.95 !important;
+}
+
 #toast-container > div .toast-close-button,
 .toast .toast-close-button {
   color: #fff !important;
   opacity: 0.8 !important;
-  font-size: 1.3rem !important;
+  font-size: 1.2rem !important;
   position: absolute !important;
-  right: 18px !important;
-  top: 12px !important;
+  top: 16px !important;
+  right: 16px !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  transition: all 0.2s ease !important;
+  z-index: 10 !important;
 }
+
 #toast-container > div .toast-close-button:hover,
 .toast .toast-close-button:hover {
   opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Message notification specific styles */
+.toast.toast-info .toast-title {
+  font-weight: 700 !important;
+}
+
+.toast.toast-success .toast-title {
+  font-weight: 700 !important;
+}
+
+.toast.toast-error .toast-title {
+  font-weight: 700 !important;
+}
+
+.toast.toast-warning .toast-title {
+  font-weight: 700 !important;
+}
+
+/* Responsive toastr */
+@media (max-width: 768px) {
+  .toast,
+  #toast-container > div {
+    min-width: 300px !important;
+    max-width: calc(100vw - 40px) !important;
+    padding: 16px 20px !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .toast .toast-title,
+  #toast-container > div .toast-title {
+    font-size: 1.1rem !important;
+  }
+
+  .toast .toast-content,
+  #toast-container > div .toast-content {
+    font-size: 0.95rem !important;
+  }
+
+  .toast .toast-close-button,
+  #toast-container > div .toast-close-button {
+    font-size: 1.1rem !important;
+    width: 20px !important;
+    height: 20px !important;
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .toast .toast-message,
+  #toast-container > div .toast-message {
+    padding-right: 25px !important;
+  }
 }
 
 /* Drag and Drop Styles */

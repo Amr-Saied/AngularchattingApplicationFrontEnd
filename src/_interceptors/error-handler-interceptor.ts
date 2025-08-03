@@ -12,16 +12,13 @@ export const errorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
       if (error) {
         switch (error.status) {
           case 400:
-            toastr.error(error.error?.message || 'Bad Request', 'Error 400');
-            toastr.warning('Please check your input and try again');
+            toastr.error(error.error?.message || 'Bad Request');
             break;
           case 401:
-            toastr.error('Unauthorized', 'Error 401');
             toastr.warning('Please login to continue');
             break;
           case 404:
-            toastr.error('Resource not found.', 'Error 404');
-            toastr.warning('The requested page does not exist');
+            toastr.error('Resource not found.');
             router.navigateByUrl('/not-found');
             break;
           case 500:

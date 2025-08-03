@@ -3,6 +3,42 @@
     <div class="col-12">
       <h2 class="text-center mb-3">My Favourites</h2>
 
+      <!-- Search Input -->
+      <div *ngIf="isLoaded && totalCount > 0" class="row mb-4">
+        <div class="col-12 col-md-6 mx-auto">
+          <div class="search-container">
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input
+                #searchInput
+                type="text"
+                class="form-control"
+                placeholder="Search favourites by name, username, or location..."
+                (input)="onSearchInput($event)"
+                autocomplete="off"
+              />
+              <button
+                *ngIf="searchTerm"
+                class="btn btn-outline-secondary"
+                type="button"
+                (click)="clearSearchAndLoadAll()"
+                title="Clear search"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div *ngIf="isSearching" class="text-center mt-2">
+              <small class="text-muted">
+                <i class="fas fa-spinner fa-spin me-1"></i>
+                Searching...
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div *ngIf="!isLoaded" class="text-center">
         <ngx-spinner
           name="loadingSpinner"
@@ -53,7 +89,12 @@
       <!-- Pagination Controls -->
       <div
         class="pagination-container mt-2 mb-4"
-        *ngIf="totalPages > 1 && isLoaded && likedMembers.length > 0"
+        *ngIf="
+          totalPages > 1 &&
+          isLoaded &&
+          likedMembers.length > 0 &&
+          !searchTerm.trim()
+        "
       >
         <div class="pagination-info">
           <span

@@ -12,6 +12,7 @@ import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
 import { TextInput } from '../_forms/text-input/text-input';
 import { RegisterModel } from '../_models/register';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -29,7 +30,8 @@ export class Register {
   constructor(
     private accountService: AccountService,
     private toastr: ToastrService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.registerForm = this.fb.group(
       {
@@ -90,13 +92,24 @@ export class Register {
       };
 
       this.accountService.register(model).subscribe({
-        next: () => {
-          this.toastr.success('Registration successful!');
-          this.cancelRegistration();
+        next: (response) => {
+          this.toastr.success('Registration successful!', 'Success', {
+            timeOut: 6000,
+            closeButton: true,
+            progressBar: true,
+          });
+          this.router.navigateByUrl('/members');
         },
         error: (error) => {
-          console.log(error);
-          this.toastr.error('Registration failed. Please try again.');
+          this.toastr.error(
+            'Registration failed. Please try again.',
+            'Registration Failed',
+            {
+              timeOut: 8000,
+              closeButton: true,
+              progressBar: true,
+            }
+          );
         },
         complete: () => {
           this.isLoading = false;
