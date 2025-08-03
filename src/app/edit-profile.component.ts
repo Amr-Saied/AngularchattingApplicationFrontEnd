@@ -13,11 +13,12 @@ import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
 import { TextInput } from '../_forms/text-input/text-input';
 import { DefaultPhotoService } from '../_services/default-photo.service';
+import { DragDropDirective } from '../_directives/drag-drop.directive';
 
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TextInput],
+  imports: [CommonModule, ReactiveFormsModule, TextInput, DragDropDirective],
   template: `
     <div class="profile-page-container container-fluid">
       <div
@@ -40,12 +41,25 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
             <div
               class="col-12 col-md-4 d-flex flex-column align-items-center justify-content-start"
             >
-              <img
-                [src]="getProfileImageUrl(member.photoUrl)"
-                class="profile-photo mb-3 shadow"
-                alt="Profile Photo"
-                style="width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 4px 24px rgba(102, 126, 234, 0.12);"
-              />
+              <div
+                appDragDrop
+                (filesDropped)="onFilesDropped($event)"
+                (dragEnter)="onDragEnter()"
+                (dragLeave)="onDragLeave()"
+                class="profile-photo-container"
+                [class.drag-over]="isDragOver"
+              >
+                <img
+                  [src]="getProfileImageUrl(member.photoUrl)"
+                  class="profile-photo mb-3 shadow"
+                  alt="Profile Photo"
+                  style="width: 180px; height: 180px; object-fit: cover; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 4px 24px rgba(102, 126, 234, 0.12);"
+                />
+                <div class="drag-overlay" *ngIf="isDragOver">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>Drop photo here</span>
+                </div>
+              </div>
               <div class="w-100">
                 <label class="form-label fw-bold">Profile Photo</label>
                 <input
@@ -54,6 +68,7 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                   (change)="onFileSelected($event)"
                   accept="image/*"
                 />
+                <small class="text-muted">Or drag and drop a photo above</small>
               </div>
             </div>
             <div class="col-12 col-md-8">
@@ -163,6 +178,7 @@ export class EditProfileComponent implements OnInit {
   editForm: FormGroup;
   successMsg: string = '';
   errorMsg: string = '';
+  isDragOver: boolean = false;
 
   constructor(
     private memberService: MemberService,
@@ -263,21 +279,41 @@ export class EditProfileComponent implements OnInit {
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-      this.memberService.uploadPhoto(file).subscribe({
-        next: (res: { url: string }) => {
-          if (this.member) {
-            this.member.photoUrl = res.url;
-            // Save the new photo URL to the backend
-            this.memberService
-              .updateMember(this.member.id, this.member)
-              .subscribe();
-          }
-        },
-        error: () => {
-          this.toastr.error('Error uploading photo');
-          console.log('Error uploading photo');
-        },
-      });
+      this.handlePhotoUpload(file);
     }
+  }
+
+  onDragEnter() {
+    this.isDragOver = true;
+  }
+
+  onDragLeave() {
+    this.isDragOver = false;
+  }
+
+  onFilesDropped(files: FileList) {
+    if (files.length > 0) {
+      const file = files[0]; // Take the first file
+      this.handlePhotoUpload(file);
+    }
+  }
+
+  private handlePhotoUpload(file: File) {
+    this.memberService.uploadPhoto(file).subscribe({
+      next: (res: { url: string }) => {
+        if (this.member) {
+          this.member.photoUrl = res.url;
+          // Save the new photo URL to the backend
+          this.memberService
+            .updateMember(this.member.id, this.member)
+            .subscribe();
+          this.toastr.success('Profile photo updated successfully!');
+        }
+      },
+      error: () => {
+        this.toastr.error('Error uploading photo');
+        console.log('Error uploading photo');
+      },
+    });
   }
 }

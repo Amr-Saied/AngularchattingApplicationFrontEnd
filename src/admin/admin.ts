@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AccountService } from '../_services/account.service';
 import { User } from '../_models/user';
 import { UsersService } from '../_services/users.service';
+import { ThemeService } from '../_services/theme.service';
 
 @Component({
   selector: 'app-admin',
@@ -19,7 +20,8 @@ export class AdminComponent implements OnInit {
 
   constructor(
     private accountService: AccountService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {

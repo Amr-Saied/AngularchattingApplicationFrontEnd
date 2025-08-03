@@ -14,13 +14,14 @@ import { ToastrService } from 'ngx-toastr';
 import { DefaultPhotoService } from '../_services/default-photo.service';
 import { MemberService } from '../_services/member.service';
 import { Member } from '../_models/member';
+import { ThemeToggle } from '../theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
   templateUrl: './nav.html',
   styleUrls: ['./nav.css'],
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, ThemeToggle],
 })
 export class Nav implements OnInit {
   loginForm: FormGroup;

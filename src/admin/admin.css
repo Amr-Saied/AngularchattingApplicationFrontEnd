@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  background: var(--main-bg);
 }
 
 .dashboard-header {
@@ -27,20 +29,20 @@
 }
 
 .dashboard-content {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--main-card-bg);
+  border-radius: var(--main-card-radius);
+  box-shadow: var(--main-shadow);
   overflow: hidden;
 }
 
 .management-section {
   padding: 30px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .management-section h2 {
   margin: 0 0 20px 0;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.5rem;
 }
 
@@ -51,18 +53,18 @@
 .loading {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .users-list h3 {
   margin: 0 0 20px 0;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.3rem;
 }
 
 .user-card {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: var(--main-card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 15px;
@@ -71,8 +73,8 @@
 
 .user-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #007bff;
+  box-shadow: var(--main-shadow);
+  border-color: #667eea;
 }
 
 .user-info {
@@ -83,8 +85,8 @@
 }
 
 .user-id {
-  background: #e9ecef;
-  color: #495057;
+  background: var(--border-color);
+  color: var(--text-secondary);
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -93,7 +95,7 @@
 
 .username {
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.1rem;
 }
 
@@ -123,8 +125,13 @@
 .no-users {
   text-align: center;
   padding: 40px;
-  color: #666;
+  color: var(--text-secondary);
   font-style: italic;
+}
+
+/* Ensure proper theming for card headers */
+.main-card h2 {
+  color: var(--text-color);
 }
 
 /* Responsive design */

@@ -4,7 +4,7 @@
 
 .form-label {
   font-weight: 600;
-  color: #495057;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
@@ -14,17 +14,19 @@
 
 .input-group-text {
   border-radius: 0.5rem 0 0 0.5rem;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--border-color);
   border-right: none;
-  background-color: #f8f9fa;
-  color: #6c757d;
+  background-color: var(--main-bg);
+  color: var(--text-secondary);
   transition: all 0.3s ease;
 }
 
 .form-control {
   border-radius: 0 0.5rem 0.5rem 0;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--border-color);
   border-left: none;
+  background-color: var(--main-card-bg);
+  color: var(--text-color);
   transition: all 0.3s ease;
   padding: 12px 15px;
 }
@@ -42,14 +44,15 @@
 
 .btn-outline-secondary {
   border-radius: 0 0.5rem 0.5rem 0;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--border-color);
   border-left: none;
+  color: var(--text-secondary);
   transition: all 0.3s ease;
 }
 
 .btn-outline-secondary:hover {
-  background-color: #6c757d;
-  border-color: #6c757d;
+  background-color: var(--text-secondary);
+  border-color: var(--text-secondary);
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
@@ -68,7 +71,7 @@
 }
 
 .text-muted {
-  color: #6c757d !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Responsive adjustments */

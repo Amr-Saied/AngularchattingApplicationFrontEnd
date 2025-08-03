@@ -40,7 +40,7 @@
 
 .search-loading p {
   margin-top: 1rem;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
@@ -76,11 +76,11 @@
   gap: 1rem;
   align-items: center;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .total-count {
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .pagination-controls {
