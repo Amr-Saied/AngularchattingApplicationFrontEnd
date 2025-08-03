@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { MemberCard } from '../Members/member-card/member-card';
 import { Member } from '../_models/member';
 import { LikesService } from '../_services/likes.service';
@@ -11,14 +12,20 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-lists',
-  imports: [CommonModule, MemberCard, NgxSpinnerModule, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MemberCard,
+    NgxSpinnerModule,
+    FormsModule,
+  ],
   templateUrl: './lists.html',
   styleUrl: './lists.css',
 })
 export class Lists implements OnInit {
   likedMembers: Member[] = [];
   isLoaded = false;
-  paginationParams: PaginationParams = { pageNumber: 1, pageSize: 6};
+  paginationParams: PaginationParams = { pageNumber: 1, pageSize: 6 };
   totalPages = 0;
   totalCount = 0;
 

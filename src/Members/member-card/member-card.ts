@@ -8,6 +8,7 @@ import { LikesService } from '../../_services/likes.service';
 import { ToastrService } from 'ngx-toastr';
 import { AccountService } from '../../_services/account.service';
 import { Router } from '@angular/router';
+import { NavigationService } from '../../_services/navigation.service';
 
 @Component({
   selector: 'app-member-card',
@@ -30,7 +31,8 @@ export class MemberCard implements OnInit {
     private likesService: LikesService,
     private toastr: ToastrService,
     private accountService: AccountService,
-    private router: Router
+    private router: Router,
+    private navigationService: NavigationService
   ) {}
 
   ngOnInit() {
@@ -162,12 +164,23 @@ export class MemberCard implements OnInit {
       return;
     }
 
-    // Navigate to messages page with the user ID
-    this.router.navigate(['/messages'], {
-      queryParams: {
+    // Determine current page to set as previous page for back navigation
+    const currentUrl = this.router.url;
+    let previousPage = '/messages'; // Default fallback
+
+    if (currentUrl.includes('/members')) {
+      previousPage = '/members';
+    } else if (currentUrl.includes('/lists')) {
+      previousPage = '/lists';
+    }
+
+    // Navigate to messages page with the user ID and track previous page
+    this.navigationService.navigateToMessagesWithHistory(
+      {
         userId: this.member.id,
         username: this.member.userName,
       },
-    });
+      previousPage
+    );
   }
 }

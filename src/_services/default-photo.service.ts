@@ -23,9 +23,14 @@ export class DefaultPhotoService {
 
   // Get profile image URL with fallback to default
   getProfileImageUrl(photoUrl: string | undefined): string {
-    if (!photoUrl || this.isDefaultImage(photoUrl)) {
+    if (!photoUrl) {
       return this.DEFAULT_PROFILE_IMAGE;
     }
+
+    if (this.isDefaultImage(photoUrl)) {
+      return this.DEFAULT_PROFILE_IMAGE;
+    }
+
     return photoUrl;
   }
 }

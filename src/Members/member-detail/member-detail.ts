@@ -1,12 +1,13 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { CommonModule, Location } from '@angular/common';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Member } from '../../_models/member';
 import { MemberService } from '../../_services/member.service';
 import { DefaultPhotoService } from '../../_services/default-photo.service';
 import { LikesService } from '../../_services/likes.service';
 import { ToastrService } from 'ngx-toastr';
 import { AccountService } from '../../_services/account.service';
+import { NavigationService } from '../../_services/navigation.service';
 import {
   GalleryComponent,
   GalleryItem,
@@ -39,20 +40,67 @@ export class MemberDetail implements OnInit {
   private memberCache = new Map<number, { data: Member; timestamp: number }>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (longer for detail pages)
 
+  // Track where user came from for proper back navigation
+  private previousPageForMessages = '/members'; // Default fallback
+
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private memberService: MemberService,
     private defaultPhotoService: DefaultPhotoService,
     private likesService: LikesService,
     private toastr: ToastrService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private navigationService: NavigationService,
+    private location: Location
   ) {}
 
   ngOnInit() {
+    // Detect where user came from for proper back navigation to messages
+    this.detectPreviousPage();
+
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (id) {
       this.loadMember(id);
     }
+  }
+
+  private detectPreviousPage() {
+    // Try multiple methods to detect where user came from
+    let previousUrl: string | null = null;
+
+    // Method 1: Check router navigation
+    const navigation = this.router.getCurrentNavigation();
+    previousUrl = navigation?.previousNavigation?.finalUrl?.toString() || null;
+
+    // Method 2: Check navigation service history as fallback
+    if (!previousUrl) {
+      previousUrl = this.navigationService.getPreviousPageFromHistory();
+    }
+
+    // Method 3: Check document referrer as last resort
+    if (!previousUrl) {
+      const referrer = document.referrer;
+      if (referrer) {
+        const url = new URL(referrer);
+        previousUrl = url.pathname;
+      }
+    }
+
+    // Determine the page based on the URL
+    if (previousUrl) {
+      if (previousUrl.includes('/lists')) {
+        this.previousPageForMessages = '/lists';
+      } else if (previousUrl.includes('/members')) {
+        this.previousPageForMessages = '/members';
+      }
+      // If coming from other pages, keep default '/members'
+    }
+
+    console.log(
+      'Detected previous page for messages navigation:',
+      this.previousPageForMessages
+    );
   }
 
   loadMember(id: number) {
@@ -256,5 +304,19 @@ export class MemberDetail implements OnInit {
       size: this.memberCache.size,
       keys: Array.from(this.memberCache.keys()),
     };
+  }
+
+  // Navigate to messages with this user
+  sendMessage() {
+    if (!this.member || this.isOwnProfile) return;
+
+    // Use the detected previous page for proper back navigation
+    this.navigationService.navigateToMessagesWithHistory(
+      {
+        userId: this.member.id,
+        username: this.member.knownAs || this.member.userName,
+      },
+      this.previousPageForMessages
+    );
   }
 }

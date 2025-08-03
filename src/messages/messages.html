@@ -1,37 +1,63 @@
 <div class="messages-container">
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading">
-    <div class="spinner"></div>
-    <p>Loading conversations...</p>
-  </div>
-
   <!-- Conversations List -->
   <div
-    *ngIf="!loading && !showChat && !showLikedUsers && conversations.length > 0"
+    *ngIf="!showChat && !showLikedUsers && conversations.length > 0"
     class="conversations-list"
   >
-    <h2>Your Conversations</h2>
-    <div
-      class="conversation-item"
-      *ngFor="let conversation of conversations"
-      (click)="selectConversation(conversation)"
-    >
-      <div class="conversation-info">
-        <h3>{{ conversation.otherUsername }}</h3>
-        <p class="last-message">{{ conversation.lastMessage }}</p>
-        <span class="time">{{ formatTime(conversation.lastMessageTime) }}</span>
-      </div>
-      <div class="unread-badge" *ngIf="conversation.unreadCount > 0">
-        {{ conversation.unreadCount }}
+    <div class="conversations-header">
+      <h2>💬 Your Conversations</h2>
+      <div class="conversations-count">{{ conversations.length }} chats</div>
+    </div>
+
+    <div class="conversations-grid">
+      <div
+        class="conversation-card"
+        *ngFor="let conversation of conversations"
+        (click)="selectConversation(conversation)"
+      >
+        <div class="conversation-avatar">
+          <img
+            [src]="getProfileImageUrl(conversation.otherUserPhotoUrl)"
+            [alt]="conversation.otherUsername"
+            class="avatar-image"
+          />
+          <div
+            class="online-status"
+            [class.online]="isUserOnline(conversation.otherUserId)"
+            [class.offline]="!isUserOnline(conversation.otherUserId)"
+          ></div>
+        </div>
+
+        <div class="conversation-content">
+          <div class="conversation-header">
+            <h3 class="username">{{ conversation.otherUsername }}</h3>
+            <span class="message-time">{{
+              formatTime(conversation.lastMessageTime)
+            }}</span>
+          </div>
+
+          <div class="conversation-footer">
+            <p class="last-message">
+              <span class="message-icon">💭</span>
+              {{ conversation.lastMessage }}
+            </p>
+            <div class="conversation-badges">
+              <div class="unread-badge" *ngIf="conversation.unreadCount > 0">
+                {{ conversation.unreadCount }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- No Conversations - Show Liked Users -->
-  <div *ngIf="!loading && !showChat && showLikedUsers" class="liked-users">
+  <div *ngIf="!showChat && showLikedUsers" class="liked-users">
     <h2>Start a Conversation</h2>
     <p class="no-conversations">
-      You don't have any conversations yet. Start chatting with people you like!
+      You don't have any conversations yet. Start chatting with people you
+      liked!
     </p>
 
     <div class="liked-users-grid">
@@ -57,7 +83,7 @@
       <p>
         You haven't liked anyone yet. Go to the Members page to discover people!
       </p>
-      <button class="primary-button" routerLink="/members">
+      <button class="primary-button" (click)="navigateToMembers()">
         Browse Members
       </button>
     </div>
@@ -81,11 +107,55 @@
           'other-message': !isMyMessage(message)
         }"
       >
+        <div class="message-avatar" *ngIf="!isMyMessage(message)">
+          <img
+            [src]="getProfileImageUrl(message.senderPhotoUrl)"
+            [alt]="message.senderUsername"
+            class="message-avatar-image"
+          />
+        </div>
+
         <div class="message-content">
-          <p>{{ message.content }}</p>
-          <span class="message-time">{{
-            formatTime(message.messageSent)
-          }}</span>
+          <p>
+            {{ message.content }}
+            <span *ngIf="message.emoji" class="emoji">{{ message.emoji }}</span>
+          </p>
+          <div class="message-footer">
+            <span class="message-time">{{
+              formatTime(message.messageSent)
+            }}</span>
+
+            <!-- Read Status Indicators for My Messages -->
+            <div *ngIf="isMyMessage(message)" class="message-status">
+              <span
+                class="read-status"
+                [ngClass]="{
+                  read: message.dateRead,
+                  sent: !message.dateRead
+                }"
+                [title]="getReadStatusTitle(message)"
+              >
+                <span *ngIf="!message.dateRead">✓</span>
+                <span *ngIf="message.dateRead">✓✓</span>
+              </span>
+
+              <button
+                class="delete-message-btn"
+                (click)="deleteMessage(message.id)"
+                title="Delete message"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-avatar" *ngIf="isMyMessage(message)">
+          <img
+            [src]="getProfileImageUrl(message.senderPhotoUrl)"
+            [alt]="message.senderUsername"
+            class="message-avatar-image"
+          />
         </div>
       </div>
 
@@ -111,7 +181,35 @@
         (input)="onMessageInput()"
         class="message-text-input"
       />
+      <button
+        type="button"
+        (click)="toggleEmojiPicker($event)"
+        class="emoji-button"
+      >
+        😊
+      </button>
       <button (click)="sendMessage()" class="send-button">Send</button>
+    </div>
+
+    <!-- Emoji Picker -->
+    <div
+      *ngIf="showEmojiPicker"
+      class="emoji-picker-container"
+      [ngClass]="{ show: showEmojiPicker }"
+      (click)="onEmojiPickerClick($event)"
+    >
+      <div class="emoji-picker">
+        <div class="emoji-grid">
+          <button
+            *ngFor="let emoji of emojis"
+            type="button"
+            class="emoji-btn"
+            (click)="addEmoji(emoji)"
+          >
+            {{ emoji }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

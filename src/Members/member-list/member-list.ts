@@ -149,12 +149,9 @@ export class MemberList implements OnInit, OnDestroy {
     const cachedData = this.getCachedData(cacheKey);
 
     if (cachedData) {
-      console.log('Using cached members data - no API call!');
       this.updateFromCache(cachedData);
       return;
     }
-
-    console.log('Making API call for members data...');
     this.memberService.getMembersPaged(this.paginationParams).subscribe({
       next: (response: PagedResult<Member>) => {
         this.members = response.items;
@@ -225,7 +222,6 @@ export class MemberList implements OnInit, OnDestroy {
       data: data,
       timestamp: Date.now(),
     });
-    console.log(`Cached members data for key: ${cacheKey}`);
   }
 
   private updateFromCache(cachedData: PagedResult<Member>): void {
@@ -235,17 +231,7 @@ export class MemberList implements OnInit, OnDestroy {
     this.isLoaded = true;
   }
 
-  // Method to clear cache (useful for testing)
   clearCache(): void {
     this.membersCache.clear();
-    console.log('Members cache cleared');
-  }
-
-  // Method to get cache info (useful for debugging)
-  getCacheInfo(): { size: number; keys: string[] } {
-    return {
-      size: this.membersCache.size,
-      keys: Array.from(this.membersCache.keys()),
-    };
   }
 }

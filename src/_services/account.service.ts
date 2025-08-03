@@ -55,8 +55,50 @@ export class AccountService {
 
   // Get current user ID
   getCurrentUserId(): number | null {
+    // First try to get from stored user data
     const loggedUser = this.getLoggedUserFromStorage();
-    return loggedUser?.id || null;
+
+    if (loggedUser?.id) {
+      return loggedUser.id;
+    }
+
+    // Fallback: decode user ID from JWT token
+    const token = localStorage.getItem('loggedUser');
+    if (token) {
+      try {
+        const user = JSON.parse(token);
+
+        if (user?.token) {
+          const payload = this.decodeJwtPayload(user.token);
+
+          if (payload?.nameid) {
+            const userId = parseInt(payload.nameid);
+            return userId;
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to decode user ID from token:', error);
+      }
+    }
+
+    return null;
+  }
+
+  // Helper function to decode JWT payload
+  private decodeJwtPayload(token: string): any {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return null;
+      }
+
+      const payload = parts[1];
+      const decoded = atob(payload);
+      return JSON.parse(decoded);
+    } catch (error) {
+      console.warn('Failed to decode JWT:', error);
+      return null;
+    }
   }
 
   // Check if current user is viewing their own profile
