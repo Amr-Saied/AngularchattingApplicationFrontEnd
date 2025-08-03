@@ -7,6 +7,7 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 import { AccountService } from '../_services/account.service';
 import { SignalRService } from '../_services/signalr.service';
 import { TokenService } from '../_services/token.service';
+import { ThemeService } from '../_services/theme.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -23,7 +24,8 @@ export class App implements OnInit, OnDestroy {
     private http: HttpClient,
     private accountService: AccountService,
     private signalRService: SignalRService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit() {

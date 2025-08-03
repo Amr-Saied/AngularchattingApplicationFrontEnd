@@ -210,7 +210,7 @@ export class SignalRService {
         `${senderName} sent you a new message`,
         `New Message`,
         {
-          timeOut: 5000,
+          timeOut: 8000, // Extended from 5000
           closeButton: true,
           progressBar: true,
           tapToDismiss: true,

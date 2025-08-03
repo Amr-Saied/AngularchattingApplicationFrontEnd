@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
   <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/home">RejectSilence</a>
+    <a class="navbar-brand" routerLink="/home">ChatBridge</a>
     <button
       class="navbar-toggler"
       type="button"
@@ -85,10 +85,22 @@
           <i class="fas fa-sign-in-alt me-1"></i>
           Login
         </button>
+
+        <!-- Theme Toggle for Non-logged Users -->
+        <div class="ms-2">
+          <app-theme-toggle></app-theme-toggle>
+        </div>
       </form>
 
       <!-- User Menu for Logged In Users -->
-      <div class="navbar-nav ms-auto" *ngIf="loggedIn">
+      <div
+        class="navbar-nav ms-auto d-flex align-items-center"
+        *ngIf="loggedIn"
+      >
+        <!-- Theme Toggle for Logged Users -->
+        <div class="me-3">
+          <app-theme-toggle></app-theme-toggle>
+        </div>
         <li class="nav-item dropdown">
           <a
             class="nav-link dropdown-toggle d-flex align-items-center"

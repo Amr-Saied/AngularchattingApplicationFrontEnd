@@ -1,6 +1,6 @@
 /* Profile Container */
 .profile-container {
-  background: #f8f9fa;
+  background: var(--main-bg);
   min-height: 100vh;
   padding-top: 20px;
 }
@@ -30,9 +30,9 @@
 
 /* Profile Card */
 .profile-card {
-  background: white;
+  background: var(--main-card-bg);
   border-radius: 15px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--main-shadow);
   overflow: hidden;
   min-height: 600px;
 }
@@ -44,7 +44,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
 }
 
 @media (min-width: 768px) {
@@ -87,12 +87,12 @@
 }
 
 .profile-name {
-  color: #2c3e50;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
 .profile-meta {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -109,29 +109,29 @@
 
 /* Profile Tabs */
 .profile-tabs {
-  border-bottom: 1px solid #e9ecef;
-  background: #f8f9fa;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--main-bg);
 }
 
 .profile-tab-btn {
   border: none;
   background: none;
   padding: 1rem 1.5rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-weight: 500;
   transition: all 0.3s ease;
   border-bottom: 3px solid transparent;
 }
 
 .profile-tab-btn:hover {
-  color: #495057;
-  background: #e9ecef;
+  color: var(--text-color);
+  background: var(--border-color);
 }
 
 .profile-tab-btn.active {
   color: #764ba2;
   border-bottom-color: #764ba2;
-  background: white;
+  background: var(--main-card-bg);
 }
 
 .profile-tab-btn i {
@@ -152,7 +152,7 @@
   max-height: 150px;
   overflow-y: auto;
   line-height: 1.7;
-  color: #333;
+  color: var(--text-color);
   white-space: pre-wrap;
   word-wrap: break-word;
   padding-right: 5px;
@@ -208,7 +208,7 @@
 
 .gallery-title h4 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--text-color);
 }
 
 .gallery-controls {

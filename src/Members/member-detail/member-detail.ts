@@ -15,11 +15,18 @@ import {
   GalleryModule,
 } from 'ng-gallery';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { PhotoViewerComponent } from '../../photo-viewer/photo-viewer.component';
 
 @Component({
   selector: 'app-member-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, GalleryModule, NgxSpinnerModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    GalleryModule,
+    NgxSpinnerModule,
+    PhotoViewerComponent,
+  ],
   templateUrl: './member-detail.html',
   styleUrl: './member-detail.css',
 })
@@ -28,6 +35,8 @@ export class MemberDetail implements OnInit {
   loading = true;
   activeTab: string = 'details';
   galleryImages: GalleryItem[] = [];
+  showPhotoViewer: boolean = false;
+  photoViewerIndex: number = 0;
   @ViewChild(GalleryComponent) galleryComp?: GalleryComponent;
 
   // Like-related properties
@@ -318,5 +327,14 @@ export class MemberDetail implements OnInit {
       },
       this.previousPageForMessages
     );
+  }
+
+  openPhotoViewer(photoIndex: number) {
+    this.photoViewerIndex = photoIndex;
+    this.showPhotoViewer = true;
+  }
+
+  closePhotoViewer() {
+    this.showPhotoViewer = false;
   }
 }

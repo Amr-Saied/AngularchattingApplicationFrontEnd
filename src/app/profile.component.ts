@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthGuard } from '../_guards/auth.guard';
@@ -15,12 +15,21 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../environments/environment';
 import { ToastrService } from 'ngx-toastr';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { DragDropDirective } from '../_directives/drag-drop.directive';
+import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 import { DefaultPhotoService } from '../_services/default-photo.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterModule, GalleryModule, NgxSpinnerModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    GalleryModule,
+    NgxSpinnerModule,
+    DragDropDirective,
+    PhotoViewerComponent,
+  ],
   template: `
     <div class="profile-container">
       <div class="profile-banner">
@@ -218,6 +227,24 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                   </div>
                 </div>
 
+                <!-- Drag and Drop Zone -->
+                <div
+                  appDragDrop
+                  (filesDropped)="onFilesDropped($event)"
+                  (dragEnter)="onDragEnter()"
+                  (dragLeave)="onDragLeave()"
+                  class="drag-drop-zone"
+                  [class.show]="showDragZone"
+                  [class.drag-over]="isDragOver"
+                >
+                  <div class="drag-drop-content">
+                    <i class="fas fa-cloud-upload-alt drag-drop-icon"></i>
+                    <p class="drag-drop-text">
+                      Drag and drop photos here or click "Add Photo" above
+                    </p>
+                  </div>
+                </div>
+
                 <!-- Gallery with photos -->
                 <div
                   class="gallery-wrapper"
@@ -247,6 +274,38 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                   </div>
                 </div>
 
+                <!-- Gallery View Mode (with View buttons) -->
+                <div
+                  class="gallery-wrapper view-mode"
+                  *ngIf="
+                    !editGalleryMode && user.photos && user.photos.length > 0
+                  "
+                >
+                  <div class="row g-2">
+                    <div
+                      class="col-3 col-md-2"
+                      *ngFor="let photo of user.photos; let i = index"
+                    >
+                      <div class="position-relative photo-item">
+                        <img
+                          [src]="photo.url"
+                          class="img-fluid rounded shadow"
+                          style="width:100%;height:100px;object-fit:cover;cursor:pointer;"
+                          (click)="openPhotoViewer(i)"
+                        />
+                        <button
+                          class="btn btn-primary btn-sm photo-view-btn"
+                          (click)="openPhotoViewer(i)"
+                          title="View Photo"
+                        >
+                          <i class="fas fa-eye"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Gallery Edit Mode (with Delete buttons) -->
                 <div
                   class="gallery-wrapper edit-mode"
                   *ngIf="
@@ -255,15 +314,22 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                 >
                   <div class="row g-2">
                     <div
-                      class="col-4 col-md-3"
-                      *ngFor="let photo of user.photos"
+                      class="col-3 col-md-2"
+                      *ngFor="let photo of user.photos; let i = index"
                     >
                       <div class="position-relative">
                         <img
                           [src]="photo.url"
                           class="img-fluid rounded shadow"
-                          style="width:100%;height:120px;object-fit:cover;"
+                          style="width:100%;height:100px;object-fit:cover;"
                         />
+                        <button
+                          class="btn btn-primary btn-sm position-absolute top-0 start-0 m-1"
+                          (click)="openPhotoViewer(i)"
+                          title="View Photo"
+                        >
+                          <i class="fas fa-eye"></i>
+                        </button>
                         <button
                           class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1"
                           (click)="deletePhoto(photo.id)"
@@ -280,6 +346,15 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
         </div>
       </div>
     </div>
+
+    <!-- Photo Viewer Modal -->
+    <app-photo-viewer
+      [isOpen]="showPhotoViewer"
+      [photos]="user.photos || []"
+      [currentIndex]="photoViewerIndex"
+      (closed)="closePhotoViewer()"
+    >
+    </app-photo-viewer>
   `,
   styleUrls: ['./profile.component.css'],
 })
@@ -315,6 +390,10 @@ export class ProfileComponent implements OnInit {
   galleryImages: GalleryItem[] = [];
   editGalleryMode = false;
   activeTab: string = 'about';
+  isDragOver: boolean = false;
+  showDragZone: boolean = false;
+  showPhotoViewer: boolean = false;
+  photoViewerIndex: number = 0;
   @ViewChild(GalleryComponent) galleryComp?: GalleryComponent;
 
   constructor(
@@ -428,5 +507,90 @@ export class ProfileComponent implements OnInit {
         this.toastr.error('Failed to delete photo.');
       },
     });
+  }
+
+  onDragEnter() {
+    this.isDragOver = true;
+  }
+
+  onDragLeave() {
+    this.isDragOver = false;
+  }
+
+  onFilesDropped(files: FileList) {
+    if (files.length > 0) {
+      const file = files[0]; // Take the first file
+      this.handleGalleryPhotoUpload(file);
+    }
+  }
+
+  private handleGalleryPhotoUpload(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    this.http
+      .post<{ url: string }>(
+        environment.apiUrl + 'Users/upload-photo',
+        formData
+      )
+      .subscribe({
+        next: (res) => {
+          // Persist the photo in the backend gallery
+          this.http
+            .post(environment.apiUrl + 'Users/AddPhoto/' + this.user.id, {
+              url: res.url,
+            })
+            .subscribe({
+              next: () => {
+                // Reload user data to refresh gallery
+                this.memberService
+                  .getMemberByUsername(this.user.userName!)
+                  .subscribe({
+                    next: (member) => {
+                      this.user = member;
+                      this.initGallery();
+                      this.toastr.success('Photo uploaded successfully!');
+                    },
+                  });
+              },
+            });
+        },
+        error: () => {
+          this.toastr.error('Failed to upload photo.');
+          console.log('Failed to upload photo.');
+        },
+      });
+  }
+
+  @HostListener('document:dragenter', ['$event'])
+  onDocumentDragEnter(event: DragEvent) {
+    // Only show if we're on the gallery tab and dragging files
+    if (
+      this.activeTab === 'gallery' &&
+      event.dataTransfer?.types.includes('Files')
+    ) {
+      this.showDragZone = true;
+    }
+  }
+
+  @HostListener('document:dragleave', ['$event'])
+  onDocumentDragLeave(event: DragEvent) {
+    // Hide when leaving the document
+    if (!event.relatedTarget) {
+      this.showDragZone = false;
+    }
+  }
+
+  @HostListener('document:drop')
+  onDocumentDrop() {
+    this.showDragZone = false;
+  }
+
+  openPhotoViewer(photoIndex: number) {
+    this.photoViewerIndex = photoIndex;
+    this.showPhotoViewer = true;
+  }
+
+  closePhotoViewer() {
+    this.showPhotoViewer = false;
   }
 }
