@@ -276,4 +276,27 @@ export class SignalRService {
       this.onlineUsers.next(userIds);
     });
   }
+
+  // Ban notification handlers
+  onUserBanned(
+    callback: (userId: number, message: string, isPermanent: boolean) => void
+  ): void {
+    if (this.hubConnection) {
+      this.hubConnection.on('UserBanned', callback);
+    }
+  }
+
+  onUserUnbanned(callback: () => void): void {
+    if (this.hubConnection) {
+      this.hubConnection.on('UserUnbanned', callback);
+    }
+  }
+
+  // Clear ban notification listeners to prevent duplicates
+  clearBanListeners(): void {
+    if (this.hubConnection) {
+      this.hubConnection.off('UserBanned');
+      this.hubConnection.off('UserUnbanned');
+    }
+  }
 }

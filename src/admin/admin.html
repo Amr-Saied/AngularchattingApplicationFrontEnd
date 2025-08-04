@@ -108,7 +108,7 @@
                       *ngIf="!user.isPermanentBan && user.banExpiryDate"
                     >
                       <strong>Unbans on:</strong>
-                      {{ user.banExpiryDate }}
+                      {{ user.banExpiryDate | date : "MMM d, y h:mm a" }}
                     </div>
                     <div class="ban-permanent" *ngIf="user.isPermanentBan">
                       <strong>Permanent Ban</strong>

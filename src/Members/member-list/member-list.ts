@@ -37,13 +37,6 @@ export class MemberList implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
-  // In-memory cache using Map
-  private membersCache = new Map<
-    string,
-    { data: PagedResult<Member>; timestamp: number }
-  >();
-  private readonly CACHE_DURATION = 2 * 60 * 1000; // 2 minutes
-
   constructor(
     private memberService: MemberService,
     private toastr: ToastrService,
@@ -145,22 +138,12 @@ export class MemberList implements OnInit, OnDestroy {
   }
 
   loadMembers() {
-    const cacheKey = this.getCacheKey();
-    const cachedData = this.getCachedData(cacheKey);
-
-    if (cachedData) {
-      this.updateFromCache(cachedData);
-      return;
-    }
     this.memberService.getMembersPaged(this.paginationParams).subscribe({
       next: (response: PagedResult<Member>) => {
         this.members = response.items;
         this.totalPages = response.totalPages;
         this.totalCount = response.totalCount;
         this.isLoaded = true;
-
-        // Cache the response
-        this.cacheData(cacheKey, response);
       },
       error: () => {
         this.isLoaded = true;
@@ -198,40 +181,9 @@ export class MemberList implements OnInit, OnDestroy {
     return pages;
   }
 
-  // Cache management methods
-  private getCacheKey(): string {
-    return `members_${this.paginationParams.pageNumber}_${this.paginationParams.pageSize}`;
-  }
-
-  private getCachedData(cacheKey: string): PagedResult<Member> | null {
-    const cached = this.membersCache.get(cacheKey);
-    if (!cached) return null;
-
-    const now = Date.now();
-    if (now - cached.timestamp < this.CACHE_DURATION) {
-      return cached.data;
-    }
-
-    // Remove stale cache
-    this.membersCache.delete(cacheKey);
-    return null;
-  }
-
-  private cacheData(cacheKey: string, data: PagedResult<Member>): void {
-    this.membersCache.set(cacheKey, {
-      data: data,
-      timestamp: Date.now(),
-    });
-  }
-
-  private updateFromCache(cachedData: PagedResult<Member>): void {
-    this.members = cachedData.items;
-    this.totalPages = cachedData.totalPages;
-    this.totalCount = cachedData.totalCount;
-    this.isLoaded = true;
-  }
-
+  // Cache is now handled by @ngneat/cashew in the service layer
   clearCache(): void {
-    this.membersCache.clear();
+    // Cache clearing is now handled automatically by the library
+    console.log('Cache is managed by @ngneat/cashew library');
   }
 }

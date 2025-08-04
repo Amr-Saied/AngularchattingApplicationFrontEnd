@@ -7,6 +7,7 @@ import { environment } from '../environments/environment';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BanStatusResponse } from '../_models/ban-status-response';
+import { SignalRService } from './signalr.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,31 +16,23 @@ export class AccountService implements OnDestroy {
   baseUrl: string = environment.apiUrl + 'Account';
   private readonly LOGGED_USER_KEY = 'loggedUser';
   private loginStateSubject = new BehaviorSubject<boolean>(false);
-  private banCheckInterval: any;
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private signalRService: SignalRService
   ) {
     // Initialize login state
     this.loginStateSubject.next(this.isLoggedIn());
-
-    // Start ban status checking if user is logged in
-    if (this.isLoggedIn()) {
-      this.startBanStatusCheck();
-    }
   }
 
   login(model: any) {
-    // Temporarily stop ban checking during login to prevent interference
-    this.stopBanStatusCheck();
-
     return this.http.post(this.baseUrl + '/Login', model).pipe(
       finalize(() => {
-        // Restart ban checking after login attempt completes
+        // Setup SignalR ban listeners after login attempt completes
         if (this.isLoggedIn()) {
-          this.startBanStatusCheck();
+          this.setupBanListeners();
         }
       })
     );
@@ -54,11 +47,8 @@ export class AccountService implements OnDestroy {
     localStorage.setItem(this.LOGGED_USER_KEY, JSON.stringify(loggedUser));
     this.loginStateSubject.next(true);
 
-    // Check ban status immediately when user logs in
-    this.checkBanStatusImmediately();
-
-    // Then set up periodic checks
-    this.startBanStatusCheck();
+    // Setup SignalR ban listeners for real-time notifications
+    this.setupBanListeners();
   }
 
   // Get logged user from local storage
@@ -76,7 +66,7 @@ export class AccountService implements OnDestroy {
   clearLoggedUserFromStorage() {
     localStorage.removeItem(this.LOGGED_USER_KEY);
     this.loginStateSubject.next(false);
-    this.stopBanStatusCheck();
+    // No need to stop SignalR listeners as they're connection-based
   }
 
   // Get login state as observable
@@ -167,101 +157,101 @@ export class AccountService implements OnDestroy {
       );
   }
 
-  // Public method to check ban status immediately (for login failures and immediate checks)
-  checkBanStatusImmediately(): void {
-    const currentUserId = this.getCurrentUserId();
-    if (currentUserId) {
-      this.checkCurrentUserBanStatus().subscribe({
-        next: (result) => {
-          if (result.isBanned) {
-            let message =
-              'Your account has been banned and you have been logged out.';
-            if (result.banReason) {
-              message += ` Reason: ${result.banReason}`;
-            }
-            if (!result.isPermanentBan && result.banExpiryDate) {
-              message += ` Your ban expires on: ${result.banExpiryDate}`;
-            }
-            message += ' Please contact an administrator for more information.';
+  // Public method to check and handle ban status (for components that need to check)
+  checkAndHandleBanStatus(): void {
+    this.checkCurrentUserBanStatus().subscribe({
+      next: (result) => {
+        this.handleHttpBanCheck(result);
+      },
+      error: (error) => {
+        console.error('Error checking ban status:', error);
+      },
+    });
+  }
 
-            this.forceLogout(message);
-          }
-        },
-        error: (error) => {
-          console.error('Immediate ban status check failed:', error);
-        },
+  // Handle ban response from backend (for login failures)
+  handleBackendBanResponse(banResponse: any): void {
+    this.handleBanNotification({
+      message: banResponse.message,
+      isPermanentBan: banResponse.isPermanentBan,
+    });
+  }
+
+  // Handle ban from HTTP check
+  handleHttpBanCheck(banData: BanStatusResponse): void {
+    if (banData.isBanned) {
+      this.handleBanNotification({
+        message:
+          banData.message ||
+          'Your account has been banned. Please contact an administrator for more information.',
+        isPermanentBan: banData.isPermanentBan,
       });
     }
   }
 
-  // Start periodic ban status checking
-  public startBanStatusCheck(): void {
-    if (this.banCheckInterval) {
-      clearInterval(this.banCheckInterval);
-    }
-
-    // Check ban status every 10 seconds
-    this.banCheckInterval = setInterval(() => {
-      if (this.isLoggedIn()) {
-        this.checkCurrentUserBanStatus().subscribe({
-          next: (result) => {
-            if (result.isBanned) {
-              let message =
-                'Your account has been banned and you have been logged out.';
-              if (result.banReason) {
-                message += ` Reason: ${result.banReason}`;
-              }
-              if (!result.isPermanentBan && result.banExpiryDate) {
-                message += ` Your ban expires on: ${result.banExpiryDate}`;
-              }
-              message +=
-                ' Please contact an administrator for more information.';
-
-              this.forceLogout(message);
-            }
-          },
-          error: (error) => {
-            console.error('Ban status check failed:', error);
-          },
-        });
-      } else {
-        this.stopBanStatusCheck();
-      }
-    }, 10000); // Check every 10 seconds
+  // Handle ban from SignalR
+  handleSignalRBan(
+    userId: number,
+    message: string,
+    isPermanent: boolean
+  ): void {
+    this.handleBanNotification({
+      message: message,
+      isPermanentBan: isPermanent,
+    });
   }
 
-  // Stop ban status checking
-  public stopBanStatusCheck(): void {
-    if (this.banCheckInterval) {
-      clearInterval(this.banCheckInterval);
-      this.banCheckInterval = null;
-    }
-  }
-
-  // Force logout with message
-  private forceLogout(message: string): void {
+  // Unified ban notification handler - used by all ban scenarios
+  handleBanNotification(banData: {
+    message: string;
+    isPermanentBan?: boolean;
+  }): void {
+    // Clear user data and logout
     this.clearLoggedUserFromStorage();
 
-    // Determine if it's a permanent ban based on message content
-    const isPermanent =
-      message.includes('permanently') || !message.includes('expires on:');
-    const title = isPermanent
+    // Show ban notification using backend-built message
+    const title = banData.isPermanentBan
       ? 'Account Permanently Banned'
       : 'Account Temporarily Banned';
 
-    this.toastr.error(message, title, {
-      timeOut: isPermanent ? 20000 : 15000, // Extended timeout
+    this.toastr.error(banData.message, title, {
+      timeOut: 8000,
       closeButton: true,
       progressBar: true,
-      disableTimeOut: false, // Allow timeout but longer
+      disableTimeOut: false,
       enableHtml: true,
-      extendedTimeOut: 5000,
+      extendedTimeOut: 8000,
     });
+
+    // Navigate to home page
     this.router.navigate(['/']);
+  }
+
+  // Setup SignalR ban listeners (only once)
+  private setupBanListeners(): void {
+    // Clear any existing listeners to prevent duplicates
+    this.signalRService.clearBanListeners();
+
+    this.signalRService.onUserBanned((userId, message, isPermanent) => {
+      this.handleSignalRBan(userId, message, isPermanent);
+    });
+
+    this.signalRService.onUserUnbanned(() => {
+      this.handleUserUnbanned();
+    });
+  }
+
+  // Handle user unbanned notification
+  private handleUserUnbanned(): void {
+    this.toastr.success('Your account has been unbanned!', 'Account Unbanned', {
+      timeOut: 5000,
+      closeButton: true,
+      progressBar: true,
+    });
   }
 
   // Clean up on service destroy
   ngOnDestroy(): void {
-    this.stopBanStatusCheck();
+    // No need to stop SignalR listeners as they're connection-based
   }
 }

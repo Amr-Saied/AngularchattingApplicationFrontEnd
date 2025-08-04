@@ -45,10 +45,6 @@ export class MemberDetail implements OnInit {
   likeLoading: boolean = false;
   isOwnProfile: boolean = false;
 
-  // In-memory cache using Map
-  private memberCache = new Map<number, { data: Member; timestamp: number }>();
-  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (longer for detail pages)
-
   // Track where user came from for proper back navigation
   private previousPageForMessages = '/members'; // Default fallback
 
@@ -113,19 +109,7 @@ export class MemberDetail implements OnInit {
   }
 
   loadMember(id: number) {
-    const cachedMember = this.getCachedMember(id);
-
-    if (cachedMember) {
-      console.log(`Using cached member data for ID ${id} - no API call!`);
-      this.member = cachedMember;
-      this.loading = false;
-      this.initGallery();
-      this.loadLikeData();
-      this.checkIfOwnProfile();
-      return;
-    }
-
-    console.log(`Making API call for member ID ${id}...`);
+    console.log(`Loading member ID ${id}...`);
     this.memberService.getMemberById(id).subscribe({
       next: (member) => {
         this.member = member;
@@ -133,9 +117,7 @@ export class MemberDetail implements OnInit {
         this.initGallery();
         this.loadLikeData();
         this.checkIfOwnProfile();
-
-        // Cache the member data
-        this.cacheMember(id, member);
+        console.log(`Member data loaded for ID: ${id}`);
       },
       error: () => {
         this.loading = false;
@@ -278,41 +260,17 @@ export class MemberDetail implements OnInit {
     }
   }
 
-  // Cache management methods
-  private getCachedMember(id: number): Member | null {
-    const cached = this.memberCache.get(id);
-    if (!cached) return null;
-
-    const now = Date.now();
-    if (now - cached.timestamp < this.CACHE_DURATION) {
-      return cached.data;
-    }
-
-    // Remove stale cache
-    this.memberCache.delete(id);
-    return null;
-  }
-
-  private cacheMember(id: number, member: Member): void {
-    this.memberCache.set(id, {
-      data: member,
-      timestamp: Date.now(),
-    });
-    console.log(`Cached member data for ID: ${id}`);
-  }
-
-  // Method to clear cache (useful for testing)
+  // Cache is now handled by @ngneat/cashew in the service layer
   clearCache(): void {
-    this.memberCache.clear();
-    console.log('Member detail cache cleared');
+    // Cache clearing is now handled automatically by the library
+    console.log('Cache is managed by @ngneat/cashew library');
   }
 
   // Method to get cache info (useful for debugging)
   getCacheInfo(): { size: number; keys: number[] } {
-    return {
-      size: this.memberCache.size,
-      keys: Array.from(this.memberCache.keys()),
-    };
+    // Cache info is now managed by the library
+    console.log('Cache info is managed by @ngneat/cashew library');
+    return { size: 0, keys: [] };
   }
 
   // Navigate to messages with this user

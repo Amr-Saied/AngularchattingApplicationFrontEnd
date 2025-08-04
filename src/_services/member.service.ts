@@ -4,6 +4,7 @@ import { Observable, Subject } from 'rxjs';
 import { Member } from '../_models/member';
 import { environment } from '../environments/environment';
 import { PaginationParams, PagedResult } from '../_models/pagination';
+import { withCache } from '@ngneat/cashew';
 
 @Injectable({ providedIn: 'root' })
 export class MemberService {
@@ -23,16 +24,32 @@ export class MemberService {
   }
 
   getMembers(): Observable<Member[]> {
-    return this.http.get<Member[]>(this.baseUrl + '/GetUsers');
+    return this.http.get<Member[]>(this.baseUrl + '/GetUsers', {
+      context: withCache({
+        ttl: 2 * 60 * 1000, // 2 minutes
+        key: 'members-list',
+      }),
+    });
   }
 
   getMemberById(id: number): Observable<Member> {
-    return this.http.get<Member>(this.baseUrl + '/GetUserById/' + id);
+    return this.http.get<Member>(this.baseUrl + '/GetUserById/' + id, {
+      context: withCache({
+        ttl: 5 * 60 * 1000, // 5 minutes
+        key: `member-${id}`,
+      }),
+    });
   }
 
   getMemberByUsername(username: string): Observable<Member> {
     return this.http.get<Member>(
-      this.baseUrl + '/GetUserByUsername/' + username
+      this.baseUrl + '/GetUserByUsername/' + username,
+      {
+        context: withCache({
+          ttl: 5 * 60 * 1000, // 5 minutes
+          key: `member-username-${username}`,
+        }),
+      }
     );
   }
 
@@ -62,6 +79,10 @@ export class MemberService {
 
     return this.http.get<PagedResult<Member>>(this.baseUrl + '/GetUsersPaged', {
       params,
+      context: withCache({
+        ttl: 2 * 60 * 1000, // 2 minutes
+        key: `members-paged-${paginationParams.pageNumber}-${paginationParams.pageSize}`,
+      }),
     });
   }
 

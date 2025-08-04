@@ -47,7 +47,6 @@ export class Nav implements OnInit {
       this.loggedIn = isLoggedIn;
       if (isLoggedIn) {
         this.loadCurrentUser();
-        // Remove redundant ban check - account service handles this
       } else {
         this.currentUser = null;
       }
@@ -85,10 +84,10 @@ export class Nav implements OnInit {
           // Save logged user data to local storage
           if (response.username && response.token) {
             const loggedUser: LoggedUser = {
-              id: response.id,
+              id: 0, // Will be decoded from token by account service
               username: response.username,
               token: response.token,
-              role: response.role,
+              role: response.role || 'Member',
             };
             this.accountService.saveLoggedUserToStorage(loggedUser);
           }
@@ -117,12 +116,9 @@ export class Nav implements OnInit {
         error: (error) => {
           console.log(error);
 
-          // Check if user is banned - let account service handle this
+          // Handle ban response from backend using unified method
           if (error.error?.error === 'USER_BANNED') {
-            // Use account service to check ban status immediately and show proper notification
-            // This will use our own date formatting instead of the backend's pre-formatted message
-            this.accountService.checkBanStatusImmediately();
-            this.router.navigate(['/']);
+            this.accountService.handleBackendBanResponse(error.error);
           } else {
             this.toastr.error(
               'Login failed. Please check your credentials.',

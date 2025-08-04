@@ -15,6 +15,7 @@ import { loadingInterceptorInterceptor } from './_interceptors/loading-intercept
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { provideHttpCache, withHttpCacheInterceptor } from '@ngneat/cashew';
 
 bootstrapApplication(App, {
   providers: [
@@ -23,6 +24,7 @@ bootstrapApplication(App, {
         tokenInterceptor,
         errorHandlerInterceptor,
         loadingInterceptorInterceptor,
+        withHttpCacheInterceptor(),
       ])
     ),
     provideRouter(routes),
@@ -35,5 +37,6 @@ bootstrapApplication(App, {
     importProvidersFrom(ReactiveFormsModule),
     importProvidersFrom(NgxSpinnerModule),
     importProvidersFrom(BrowserAnimationsModule),
+    provideHttpCache(),
   ],
 });
