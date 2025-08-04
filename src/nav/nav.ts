@@ -1,12 +1,6 @@
 // nav.ts
 import { Component, OnInit } from '@angular/core';
 import { AccountService } from '../_services/account.service';
-import {
-  FormBuilder,
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-} from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { LoggedUser } from '../_models/logged-user';
@@ -15,32 +9,27 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
 import { MemberService } from '../_services/member.service';
 import { Member } from '../_models/member';
 import { ThemeToggle } from '../theme-toggle/theme-toggle';
+import { LoginFormsComponent } from './login-forms.component';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
   templateUrl: './nav.html',
   styleUrls: ['./nav.css'],
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, ThemeToggle],
+  imports: [CommonModule, RouterModule, ThemeToggle, LoginFormsComponent],
 })
 export class Nav implements OnInit {
-  loginForm: FormGroup;
   loggedIn = false;
   currentUser: Member | null = null;
+  showLoginModal = false;
 
   constructor(
     private accountService: AccountService,
     private router: Router,
     private toastr: ToastrService,
-    private fb: FormBuilder,
     private defaultPhotoService: DefaultPhotoService,
     private memberService: MemberService
-  ) {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-    });
-  }
+  ) {}
 
   ngOnInit() {
     this.accountService.getLoginState().subscribe((isLoggedIn) => {
@@ -67,75 +56,27 @@ export class Nav implements OnInit {
     }
   }
 
-  login() {
-    if (this.loginForm.valid) {
-      // Clear any previous error messages
-      this.toastr.clear();
+  // Show login modal
+  showLogin() {
+    this.showLoginModal = true;
+  }
 
-      const model = {
-        Username: this.loginForm.get('username')?.value,
-        Password: this.loginForm.get('password')?.value,
-      };
+  // Handle login success
+  onLoginSuccess(response: any) {
+    this.loggedIn = true;
+    this.showLoginModal = false;
 
-      this.accountService.login(model).subscribe({
-        next: (response: any) => {
-          this.loggedIn = true;
-
-          // Save logged user data to local storage
-          if (response.username && response.token) {
-            const loggedUser: LoggedUser = {
-              id: 0, // Will be decoded from token by account service
-              username: response.username,
-              token: response.token,
-              role: response.role || 'Member',
-            };
-            this.accountService.saveLoggedUserToStorage(loggedUser);
-          }
-
-          // Show success message
-          this.toastr.success(
-            `Welcome back, ${response.username}!`,
-            'Login Successful',
-            {
-              timeOut: 6000,
-              closeButton: true,
-              progressBar: true,
-            }
-          );
-
-          // Clear the login form
-          this.loginForm.reset();
-
-          // Redirect based on user role
-          if (response.role === 'Admin') {
-            this.router.navigate(['/admin']);
-          } else {
-            this.router.navigate(['/home']);
-          }
-        },
-        error: (error) => {
-          console.log(error);
-
-          // Handle ban response from backend using unified method
-          if (error.error?.error === 'USER_BANNED') {
-            this.accountService.handleBackendBanResponse(error.error);
-          } else {
-            this.toastr.error(
-              'Login failed. Please check your credentials.',
-              'Login Failed',
-              {
-                timeOut: 8000,
-                closeButton: true,
-                progressBar: true,
-              }
-            );
-          }
-
-          // Reset the login form
-          this.loginForm.reset();
-        },
-      });
+    // Redirect based on user role
+    if (response.role === 'Admin') {
+      this.router.navigate(['/admin']);
+    } else {
+      this.router.navigate(['/home']);
     }
+  }
+
+  // Close login modal
+  closeLoginModal() {
+    this.showLoginModal = false;
   }
 
   logout() {

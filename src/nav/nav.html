@@ -41,46 +41,12 @@
         </ng-template>
       </ul>
 
-      <!-- Enhanced Login Form -->
-      <form
-        [formGroup]="loginForm"
-        class="d-flex align-items-center"
-        role="Login"
-        (ngSubmit)="login()"
-        *ngIf="!loggedIn"
-      >
-        <div class="input-group me-2" style="max-width: 200px">
-          <span class="input-group-text bg-light border-end-0">
-            <i class="fas fa-user text-muted"></i>
-          </span>
-          <input
-            class="form-control border-start-0"
-            type="text"
-            placeholder="Username"
-            aria-label="Username"
-            formControlName="username"
-            required
-          />
-        </div>
-
-        <div class="input-group me-2" style="max-width: 200px">
-          <span class="input-group-text bg-light border-end-0">
-            <i class="fas fa-lock text-muted"></i>
-          </span>
-          <input
-            class="form-control border-start-0"
-            type="password"
-            placeholder="Password"
-            aria-label="Password"
-            formControlName="password"
-            required
-          />
-        </div>
-
+      <!-- Login Button for Non-logged Users -->
+      <div class="d-flex align-items-center" *ngIf="!loggedIn">
         <button
-          class="btn btn-success px-4"
-          type="submit"
-          [disabled]="loginForm.invalid"
+          class="btn btn-success px-4 me-2"
+          type="button"
+          (click)="showLogin()"
         >
           <i class="fas fa-sign-in-alt me-1"></i>
           Login
@@ -90,7 +56,7 @@
         <div class="ms-2">
           <app-theme-toggle></app-theme-toggle>
         </div>
-      </form>
+      </div>
 
       <!-- User Menu for Logged In Users -->
       <div
@@ -139,3 +105,37 @@
     </div>
   </div>
 </nav>
+
+<!-- Login Modal -->
+<div
+  class="modal fade"
+  [class.show]="showLoginModal"
+  [style.display]="showLoginModal ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-sign-in-alt me-2"></i>Login
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeLoginModal()"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <app-login-forms
+          (loginSuccess)="onLoginSuccess($event)"
+          (closeModal)="closeLoginModal()"
+        ></app-login-forms>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade show" *ngIf="showLoginModal"></div>

@@ -19,6 +19,18 @@
   --text-color: #333;
   --text-secondary: #6c757d;
   --border-color: #e9ecef;
+
+  /* Additional variables for login forms */
+  --text-primary: #333;
+  --text-muted: #6c757d;
+  --bg-primary: #fff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --primary-color: #667eea;
+  --primary-hover: #5a6fd8;
+  --primary-rgb: 102, 126, 234;
+  --danger-color: #dc3545;
+  --btn-close-filter: invert(0);
 }
 
 /* Dark Theme Variables */
@@ -31,6 +43,18 @@
   --text-color: #e9ecef;
   --text-secondary: #adb5bd;
   --border-color: #495057;
+
+  /* Dark theme variables for login forms */
+  --text-primary: #e9ecef;
+  --text-muted: #adb5bd;
+  --bg-primary: #2d2d2d;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #495057;
+  --primary-color: #4c63d2;
+  --primary-hover: #3d54c7;
+  --primary-rgb: 76, 99, 210;
+  --danger-color: #dc3545;
+  --btn-close-filter: invert(1);
 }
 
 /* Dark theme specific improvements */

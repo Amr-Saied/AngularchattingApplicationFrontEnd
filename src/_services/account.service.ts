@@ -38,6 +38,38 @@ export class AccountService implements OnDestroy {
     );
   }
 
+  // Google Login
+  googleLogin(googleLoginDto: any) {
+    return this.http.post(this.baseUrl + '/GoogleLogin', googleLoginDto).pipe(
+      finalize(() => {
+        // Setup SignalR ban listeners after login attempt completes
+        if (this.isLoggedIn()) {
+          this.setupBanListeners();
+        }
+      })
+    );
+  }
+
+  // Forgot Password
+  forgotPassword(email: string) {
+    return this.http.post(this.baseUrl + '/ForgotPassword', { email });
+  }
+
+  // Reset Password
+  resetPassword(resetPasswordDto: any) {
+    return this.http.post(this.baseUrl + '/ResetPassword', resetPasswordDto);
+  }
+
+  // Forgot Username
+  forgotUsername(email: string) {
+    return this.http.post(this.baseUrl + '/ForgotUsername', { email });
+  }
+
+  // Resend Confirmation Email
+  resendConfirmationEmail(email: string) {
+    return this.http.post(this.baseUrl + '/ResendConfirmation', email);
+  }
+
   register(model: any) {
     return this.http.post(this.baseUrl + '/Register', model);
   }

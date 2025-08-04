@@ -66,3 +66,55 @@
     margin-bottom: 15px;
   }
 }
+
+/* Modal Styles */
+.modal {
+  z-index: 1050;
+}
+
+.modal-backdrop {
+  z-index: 1040;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 1rem 1rem 0 0;
+}
+
+.modal-body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 0 0 1rem 1rem;
+}
+
+.modal-title {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.btn-close {
+  filter: var(--btn-close-filter);
+}
+
+/* Dark theme modal adjustments */
+.dark-theme .modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.dark-theme .modal-header {
+  background-color: var(--bg-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+.dark-theme .modal-body {
+  background-color: var(--bg-secondary);
+}
