@@ -13,6 +13,7 @@ import { BuggyComponenet } from '../buggy-componenet/buggy-componenet';
 import { ProfileComponent } from './profile.component';
 import { EditProfileComponent } from './edit-profile.component';
 import { MessagesResolver } from '../_services/messages.resolver';
+import { ResetPasswordComponent } from '../reset-password/reset-password';
 
 export const routes: Routes = [
   {
@@ -38,6 +39,15 @@ export const routes: Routes = [
     path: 'messages',
     component: Messages,
     canActivate: [AuthGuard],
+    canDeactivate: [
+      (component: Messages) => {
+        // Prevent deactivation if component is still loading
+        if (component && !component.isInitialized) {
+          return false;
+        }
+        return true;
+      },
+    ],
     resolve: { data: MessagesResolver },
   },
   {
@@ -72,6 +82,10 @@ export const routes: Routes = [
     path: 'edit-profile',
     component: EditProfileComponent,
     canActivate: [AuthGuard],
+  },
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent,
   },
   {
     path: '**',

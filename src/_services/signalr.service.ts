@@ -56,10 +56,21 @@ export class SignalRService {
       this.connectionEstablished.next(false);
     });
 
-    return this.hubConnection.start().then(() => {
-      this.connectionEstablished.next(true);
-      this.setupEventHandlers();
-    });
+    return this.hubConnection
+      .start()
+      .then(() => {
+        this.connectionEstablished.next(true);
+        this.setupEventHandlers();
+      })
+      .catch((error) => {
+        console.warn(
+          'SignalR connection failed, but continuing without real-time features:',
+          error.message
+        );
+        this.connectionEstablished.next(false);
+        // Don't throw the error, just log it
+        return Promise.resolve();
+      });
   }
 
   stopConnection(): void {

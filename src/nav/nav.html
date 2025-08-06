@@ -1,6 +1,8 @@
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
   <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/home">ChatBridge</a>
+    <a class="navbar-brand" routerLink="/home">{{
+      translationService.translate("appName")
+    }}</a>
     <button
       class="navbar-toggler"
       type="button"
@@ -18,26 +20,39 @@
           <a
             class="nav-link"
             routerLink="/members"
-            (click)="onExploreMembersClick()"
-            >Explore Members</a
+            >{{ translationService.translate("exploreMembers") }}</a
           >
         </li>
         <ng-template #empty1>
           <li class="nav-item invisible">
-            <a class="nav-link">Explore Members</a>
+            <a class="nav-link">{{
+              translationService.translate("exploreMembers")
+            }}</a>
           </li>
         </ng-template>
         <li class="nav-item" *ngIf="loggedIn; else empty2">
-          <a class="nav-link" routerLink="/lists">Favourites</a>
+          <a class="nav-link" routerLink="/lists">{{
+            translationService.translate("favourites")
+          }}</a>
         </li>
         <ng-template #empty2>
-          <li class="nav-item invisible"><a class="nav-link">Favourites</a></li>
+          <li class="nav-item invisible">
+            <a class="nav-link">{{
+              translationService.translate("favourites")
+            }}</a>
+          </li>
         </ng-template>
         <li class="nav-item" *ngIf="loggedIn; else empty3">
-          <a class="nav-link" routerLink="/messages">Messages</a>
+          <a class="nav-link" routerLink="/messages">{{
+            translationService.translate("messages")
+          }}</a>
         </li>
         <ng-template #empty3>
-          <li class="nav-item invisible"><a class="nav-link">Messages</a></li>
+          <li class="nav-item invisible">
+            <a class="nav-link">{{
+              translationService.translate("messages")
+            }}</a>
+          </li>
         </ng-template>
       </ul>
 
@@ -49,8 +64,13 @@
           (click)="showLogin()"
         >
           <i class="fas fa-sign-in-alt me-1"></i>
-          Login
+          {{ translationService.translate("login") }}
         </button>
+
+        <!-- Language Switcher for Non-logged Users -->
+        <div class="me-2">
+          <app-language-switcher></app-language-switcher>
+        </div>
 
         <!-- Theme Toggle for Non-logged Users -->
         <div class="ms-2">
@@ -63,6 +83,11 @@
         class="navbar-nav ms-auto d-flex align-items-center"
         *ngIf="loggedIn"
       >
+        <!-- Language Switcher for Logged Users -->
+        <div class="me-3">
+          <app-language-switcher></app-language-switcher>
+        </div>
+
         <!-- Theme Toggle for Logged Users -->
         <div class="me-3">
           <app-theme-toggle></app-theme-toggle>
@@ -85,18 +110,21 @@
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
               <a class="dropdown-item" routerLink="/profile">
-                <i class="fas fa-user me-2"></i>Profile
+                <i class="fas fa-user me-2"></i
+                >{{ translationService.translate("profile") }}
               </a>
             </li>
             <li>
               <a class="dropdown-item" routerLink="/edit-profile">
-                <i class="fas fa-edit me-2"></i>Edit Profile
+                <i class="fas fa-edit me-2"></i
+                >{{ translationService.translate("editProfile") }}
               </a>
             </li>
             <li><hr class="dropdown-divider" /></li>
             <li>
               <a class="dropdown-item text-danger" href="#" (click)="logout()">
-                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                <i class="fas fa-sign-out-alt me-2"></i
+                >{{ translationService.translate("logout") }}
               </a>
             </li>
           </ul>
@@ -118,7 +146,8 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-sign-in-alt me-2"></i>Login
+          <i class="fas fa-sign-in-alt me-2"></i
+          >{{ translationService.translate("login") }}
         </h5>
         <button
           type="button"
@@ -129,8 +158,11 @@
       </div>
       <div class="modal-body">
         <app-login-forms
+          *ngIf="showLoginModal"
+          #loginForms
           (loginSuccess)="onLoginSuccess($event)"
           (closeModal)="closeLoginModal()"
+          (formReady)="onLoginFormReady()"
         ></app-login-forms>
       </div>
     </div>

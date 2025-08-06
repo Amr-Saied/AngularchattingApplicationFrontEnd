@@ -14,7 +14,9 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(): boolean {
-    if (this.accountService.isLoggedIn()) {
+    const isLoggedIn = this.accountService.isLoggedIn();
+
+    if (isLoggedIn) {
       return true;
     } else {
       this.toastr.warning('Please login to access this page');

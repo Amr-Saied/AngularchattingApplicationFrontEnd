@@ -26,23 +26,37 @@ export class MessagesResolver implements Resolve<MessagesResolverData> {
   resolve(): Observable<MessagesResolverData> {
     // Load both conversations and liked users in parallel for better performance
     return forkJoin({
-      conversations: this.messageService
-        .getConversations()
-        .pipe(catchError(() => of([]))),
-      likedUsers: this.likesService.getMyLikes().pipe(catchError(() => of([]))),
+      conversations: this.messageService.getConversations().pipe(
+        catchError((error) => {
+          console.error(
+            'MessagesResolver: Error loading conversations:',
+            error
+          );
+          return of([]);
+        })
+      ),
+      likedUsers: this.likesService.getMyLikes().pipe(
+        catchError((error) => {
+          console.error('MessagesResolver: Error loading liked users:', error);
+          return of([]);
+        })
+      ),
     }).pipe(
-      map(({ conversations, likedUsers }) => ({
-        conversations,
-        likedUsers,
-        hasConversations: conversations.length > 0,
-      })),
-      catchError(() =>
-        of({
+      map(({ conversations, likedUsers }) => {
+        return {
+          conversations,
+          likedUsers,
+          hasConversations: conversations.length > 0,
+        };
+      }),
+      catchError((error) => {
+        console.error('MessagesResolver: Error resolving data:', error);
+        return of({
           conversations: [],
           likedUsers: [],
           hasConversations: false,
-        })
-      )
+        });
+      })
     );
   }
 }

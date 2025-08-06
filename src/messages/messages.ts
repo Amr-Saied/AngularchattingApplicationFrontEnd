@@ -1,10 +1,12 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   ChangeDetectorRef,
   HostListener,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { CommonModule, I18nPluralPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -20,6 +22,8 @@ import { TokenService } from '../_services/token.service';
 import { EMOJI_LIST } from '../_data/emoji-data';
 import { MessagesResolverData } from '../_services/messages.resolver';
 import { NavigationService } from '../_services/navigation.service';
+import { NavigationEnd } from '@angular/router';
+import RecordRTC from 'recordrtc';
 
 @Component({
   selector: 'app-messages',
@@ -41,10 +45,37 @@ export class Messages implements OnInit {
   isTyping = false;
   typingTimeout: any;
   onlineUsers: number[] = [];
+  currentTime: string = new Date().toLocaleTimeString();
+
+  // Voice recording properties
+  isRecording = false;
+  recordingDuration = 0;
+  recordingTimer: any;
+  private recorder: RecordRTC | null = null;
+  private stream: MediaStream | null = null;
+
+  // Delete confirmation modal
+  showDeleteModal = false;
+  messageToDelete: number | null = null;
+
+  // Audio playback properties
+  private currentlyPlayingAudio: HTMLAudioElement | null = null;
+  private playingMessageId: number | null = null;
+
+  // Waveform cache to prevent ExpressionChangedAfterItHasBeenCheckedError
+  private waveformCache = new Map<number, number[]>();
+
   private signalRHandlersSetup = false;
   private handlerRegistrationCount = 0;
   private bufferedReadEvents: { messageId: number; userId: number }[] = [];
   private messageReceiveCallback?: (message: any) => void;
+  private isComponentInitialized = false; // Add flag to track initialization
+  private onlineUsersSubscription?: Subscription;
+
+  // Public getter for route guard
+  get isInitialized(): boolean {
+    return this.isComponentInitialized;
+  }
 
   constructor(
     private messageService: MessageService,
@@ -57,54 +88,64 @@ export class Messages implements OnInit {
     private tokenService: TokenService,
     private cdr: ChangeDetectorRef,
     private navigationService: NavigationService
-  ) {}
-
-  ngOnInit() {
-    // Get pre-loaded data from resolver
-    const resolvedData: MessagesResolverData = this.route.snapshot.data['data'];
-
-    // Set the pre-loaded data
-    this.conversations = resolvedData.conversations;
-    this.likedUsers = resolvedData.likedUsers;
-    this.showLikedUsers = !resolvedData.hasConversations;
-
-    // Wait for SignalR connection and then setup handlers
-    this.signalRService.getConnectionStatus().subscribe((isConnected) => {
-      if (isConnected && !this.signalRHandlersSetup) {
-        this.setupSignalRHandlers();
-        this.signalRHandlersSetup = true;
+  ) {
+    // Add a guard to prevent premature destruction
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        // If we're navigating away from messages while still loading, prevent it
+        if (!event.url.includes('/messages') && this.showChat) {
+          // Component is trying to navigate away while chat is active
+        }
       }
     });
+  }
 
-    // Subscribe to online users updates
-    this.signalRService.getOnlineUsers().subscribe((users) => {
-      this.onlineUsers = users;
-      this.cdr.detectChanges();
-    });
+  ngOnInit() {
+    // Check if user is logged in before proceeding
+    if (!this.accountService.isLoggedIn()) {
+      this.router.navigate(['/']);
+      return;
+    }
 
-    // Check if we have query parameters for direct chat
+    // Set initialization flag
+    this.isComponentInitialized = true;
+
+    // Get resolved data from the resolver
+    const resolvedData = this.route.snapshot.data[
+      'data'
+    ] as MessagesResolverData;
+
+    if (resolvedData) {
+      this.conversations = resolvedData.conversations || [];
+      this.likedUsers = resolvedData.likedUsers || [];
+    } else {
+      this.loadConversations();
+      this.loadLikedUsers();
+    }
+
+    // Check for query parameters to start a conversation
     this.route.queryParams.subscribe((params) => {
       const userId = params['userId'];
       const username = params['username'];
 
       if (userId && username) {
-        // Start chat directly with the specified user
-        this.selectedConversation = {
-          otherUserId: parseInt(userId),
-          otherUsername: username,
-          lastMessage: '',
-          lastMessageTime: new Date(),
-          unreadCount: 0,
-        };
-        this.showChat = true;
-        this.loadMessages(parseInt(userId));
-        // Clear query parameters
-        this.router.navigate([], { queryParams: {} });
+        this.startChatWithUserFromParams(Number(userId), username);
+      } else {
+        this.showChat = false;
+        this.showLikedUsers = false;
       }
     });
 
-    // Force change detection after setting initial data
-    this.cdr.detectChanges();
+    // Setup SignalR handlers
+    this.setupSignalRHandlers();
+
+    // Subscribe to online users updates
+    this.onlineUsersSubscription = this.signalRService
+      .getOnlineUsers()
+      .subscribe((users) => {
+        this.onlineUsers = users;
+        this.cdr.detectChanges();
+      });
   }
 
   // SignalR is now handled globally in App component
@@ -176,6 +217,9 @@ export class Messages implements OnInit {
           messageSent: messageSent ? new Date(messageSent) : new Date(),
           dateRead: undefined, // New messages via SignalR should always start as unread
           emoji: message.Emoji || message.emoji,
+          voiceUrl: message.VoiceUrl || message.voiceUrl,
+          voiceDuration: message.VoiceDuration || message.voiceDuration,
+          messageType: message.MessageType || message.messageType,
         };
 
         this.messages.push(localMessage);
@@ -237,7 +281,6 @@ export class Messages implements OnInit {
     });
 
     // Message read handler (keep local for UI updates)
-    this.handlerRegistrationCount++;
     this.signalRService.onMessageRead((messageId: number, userId: number) => {
       this.processMessageReadEvent(messageId, userId);
     });
@@ -250,6 +293,11 @@ export class Messages implements OnInit {
   }
 
   loadConversations() {
+    // Don't load conversations if we're already in a direct chat
+    if (this.showChat && this.selectedConversation) {
+      return;
+    }
+
     this.messageService.getConversations().subscribe({
       next: (conversations) => {
         // Keep one debug log for missing photos
@@ -259,27 +307,38 @@ export class Messages implements OnInit {
         });
 
         this.conversations = conversations;
-        if (conversations.length === 0) {
+        if (conversations.length === 0 && !this.showChat) {
           this.loadLikedUsers();
         }
       },
       error: () => {
-        this.loadLikedUsers();
+        if (!this.showChat) {
+          this.loadLikedUsers();
+        }
       },
     });
   }
 
   loadLikedUsers() {
+    // Don't load liked users if we're already in a direct chat
+    if (this.showChat && this.selectedConversation) {
+      return;
+    }
+
     this.likesService.getMyLikes().subscribe({
       next: (users) => {
         this.likedUsers = users;
-        this.showLikedUsers = true;
-        this.cdr.detectChanges(); // Force change detection after state change
+        if (!this.showChat) {
+          this.showLikedUsers = true;
+          this.cdr.detectChanges(); // Force change detection after state change
+        }
       },
       error: () => {
         this.likedUsers = [];
-        this.showLikedUsers = true;
-        this.cdr.detectChanges(); // Force change detection after state change
+        if (!this.showChat) {
+          this.showLikedUsers = true;
+          this.cdr.detectChanges(); // Force change detection after state change
+        }
       },
     });
   }
@@ -292,41 +351,49 @@ export class Messages implements OnInit {
   }
 
   loadMessages(otherUserId: number) {
-    // Set current chat user for notification management
-    this.signalRService.setCurrentChatUser(otherUserId);
+    try {
+      // Set current chat user for notification management
+      this.signalRService.setCurrentChatUser(otherUserId);
 
-    this.messageService.getMessages(otherUserId).subscribe({
-      next: (messages) => {
-        this.messages = messages;
+      this.messageService.getMessages(otherUserId).subscribe({
+        next: (messages) => {
+          this.messages = messages;
 
-        // Find unread messages that I received
-        const unreadMessages = messages.filter(
-          (m) =>
-            !m.dateRead &&
-            m.senderId !== this.getCurrentUserId() &&
-            m.recipientId === this.getCurrentUserId()
-        );
+          // Find unread messages that I received
+          const unreadMessages = messages.filter(
+            (m) =>
+              !m.dateRead &&
+              m.senderId !== this.getCurrentUserId() &&
+              m.recipientId === this.getCurrentUserId()
+          );
 
-        // Replay any buffered read events now that messages are loaded
-        setTimeout(() => {
-          this.replayBufferedReadEvents();
-        }, 100);
+          // Replay any buffered read events now that messages are loaded
+          setTimeout(() => {
+            this.replayBufferedReadEvents();
+          }, 100);
 
-        // Auto-mark unread messages as read when opening chat
-        if (unreadMessages.length > 0) {
-          unreadMessages.forEach((message) => {
-            this.autoMarkAsRead(message.id);
-          });
-        }
+          // Auto-mark unread messages as read when opening chat
+          if (unreadMessages.length > 0) {
+            unreadMessages.forEach((message) => {
+              this.autoMarkAsRead(message.id);
+            });
+          }
 
-        // Auto-scroll to bottom when opening chat
-        this.cdr.detectChanges();
-        setTimeout(() => this.scrollToBottom(), 200);
-      },
-      error: () => {
-        this.messages = [];
-      },
-    });
+          // Auto-scroll to bottom when opening chat
+          this.cdr.detectChanges();
+          setTimeout(() => this.scrollToBottom(), 200);
+        },
+        error: (error) => {
+          console.error('Messages: Error loading messages:', error);
+          this.messages = [];
+        },
+      });
+    } catch (error) {
+      console.error('Messages: Error in loadMessages:', error);
+      if (error instanceof Error) {
+        console.error('Messages: Error stack:', error.stack);
+      }
+    }
   }
 
   sendMessage() {
@@ -464,13 +531,13 @@ export class Messages implements OnInit {
     const messageDate = new Date(date);
 
     if (messageDate.toDateString() === today.toDateString()) {
-      return 'Today';
+      return `Today`;
     }
 
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     if (messageDate.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
+      return `Yesterday`;
     }
 
     return messageDate.toLocaleDateString();
@@ -522,6 +589,11 @@ export class Messages implements OnInit {
   }
 
   ngOnDestroy() {
+    // Only proceed with cleanup if component was properly initialized
+    if (!this.isComponentInitialized) {
+      return;
+    }
+
     // Clear current chat user when leaving
     this.signalRService.setCurrentChatUser(null);
 
@@ -537,10 +609,16 @@ export class Messages implements OnInit {
       clearTimeout(this.typingTimeout);
     }
 
-    // Reset SignalR handlers flag and clear buffers
-    this.signalRHandlersSetup = false;
-    this.handlerRegistrationCount = 0; // Reset counter
-    this.bufferedReadEvents = []; // Clear any pending read events
+    // Remove document click listener
+    document.removeEventListener('click', this.onDocumentClick.bind(this));
+
+    // Remove window focus listener
+    window.removeEventListener('focus', this.onWindowFocus.bind(this));
+
+    // Unsubscribe from online users updates
+    if (this.onlineUsersSubscription) {
+      this.onlineUsersSubscription.unsubscribe();
+    }
   }
 
   getProfileImageUrl(photoUrl: string | undefined): string {
@@ -675,31 +753,47 @@ export class Messages implements OnInit {
   }
 
   deleteMessage(messageId: number) {
-    if (!confirm('Are you sure you want to delete this message?')) {
-      return;
-    }
+    this.messageToDelete = messageId;
+    this.showDeleteModal = true;
+  }
 
-    this.messageService.deleteMessage(messageId).subscribe({
-      next: (success) => {
-        if (success) {
-          // Remove message from local UI immediately
-          this.messages = this.messages.filter((m) => m.id !== messageId);
-          this.cdr.detectChanges();
+  confirmDelete() {
+    if (this.messageToDelete) {
+      this.messageService.deleteMessage(this.messageToDelete).subscribe({
+        next: (success) => {
+          if (success) {
+            // Remove message from local UI immediately
+            this.messages = this.messages.filter(
+              (m) => m.id !== this.messageToDelete
+            );
+            this.cdr.detectChanges();
 
-          // Update conversation last message if this was the latest message
-          if (this.selectedConversation && this.messages.length > 0) {
-            const lastMessage = this.messages[this.messages.length - 1];
-            this.selectedConversation.lastMessage = lastMessage.content;
-            this.selectedConversation.lastMessageTime = lastMessage.messageSent;
-          } else if (this.selectedConversation && this.messages.length === 0) {
-            this.selectedConversation.lastMessage = '';
+            // Update conversation last message if this was the latest message
+            if (this.selectedConversation && this.messages.length > 0) {
+              const lastMessage = this.messages[this.messages.length - 1];
+              this.selectedConversation.lastMessage = lastMessage.content;
+              this.selectedConversation.lastMessageTime =
+                lastMessage.messageSent;
+            } else if (
+              this.selectedConversation &&
+              this.messages.length === 0
+            ) {
+              this.selectedConversation.lastMessage = '';
+            }
+            this.showDeleteModal = false;
+            this.messageToDelete = null;
           }
-        }
-      },
-      error: (error) => {
-        // Silent error handling for production
-      },
-    });
+        },
+        error: (error) => {
+          // Silent error handling for production
+        },
+      });
+    }
+  }
+
+  cancelDelete() {
+    this.showDeleteModal = false;
+    this.messageToDelete = null;
   }
 
   navigateToMembers() {
@@ -715,5 +809,226 @@ export class Messages implements OnInit {
     } catch (err) {
       // Silent error handling for production
     }
+  }
+
+  private startChatWithUserFromParams(userId: number, username: string) {
+    // Find if there's an existing conversation
+    const existingConversation = this.conversations.find(
+      (conv) => conv.otherUserId === userId
+    );
+
+    if (existingConversation) {
+      this.selectConversation(existingConversation);
+    } else {
+      // Create a new conversation object
+      const newConversation: ConversationDto = {
+        otherUserId: userId,
+        otherUsername: username,
+        lastMessage: '',
+        lastMessageTime: new Date(),
+        unreadCount: 0,
+      };
+
+      this.conversations.unshift(newConversation);
+      this.selectConversation(newConversation);
+    }
+  }
+
+  // Voice recording methods
+  async startVoiceRecording() {
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      this.recorder = new RecordRTC(this.stream, {
+        type: 'audio',
+        mimeType: 'audio/webm',
+        recorderType: RecordRTC.StereoAudioRecorder,
+        numberOfAudioChannels: 1,
+        desiredSampRate: 16000,
+      });
+
+      this.recorder.startRecording();
+      this.isRecording = true;
+      this.recordingDuration = 0;
+
+      // Start timer
+      this.recordingTimer = setInterval(() => {
+        this.recordingDuration++;
+        this.cdr.detectChanges();
+      }, 1000);
+
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error starting voice recording:', error);
+      alert('Could not access microphone. Please check permissions.');
+    }
+  }
+
+  stopVoiceRecording() {
+    if (!this.recorder || !this.isRecording) return;
+
+    this.recorder.stopRecording(() => {
+      const blob = this.recorder!.getBlob();
+      this.sendVoiceMessage(blob);
+
+      // Cleanup moved inside callback
+      this.isRecording = false;
+      if (this.recordingTimer) {
+        clearInterval(this.recordingTimer);
+        this.recordingTimer = null;
+      }
+      this.recordingDuration = 0;
+
+      if (this.stream) {
+        this.stream.getTracks().forEach((track) => track.stop());
+        this.stream = null;
+      }
+
+      this.recorder = null;
+      this.cdr.detectChanges();
+    });
+  }
+
+  cancelVoiceRecording() {
+    if (this.recorder) {
+      this.recorder.stopRecording();
+    }
+
+    // Cleanup
+    this.isRecording = false;
+    if (this.recordingTimer) {
+      clearInterval(this.recordingTimer);
+      this.recordingTimer = null;
+    }
+    this.recordingDuration = 0;
+
+    if (this.stream) {
+      this.stream.getTracks().forEach((track) => track.stop());
+      this.stream = null;
+    }
+
+    this.recorder = null;
+    this.cdr.detectChanges();
+  }
+
+  private sendVoiceMessage(blob: Blob) {
+    if (!this.selectedConversation) return;
+
+    const file = new File([blob], 'voice-message.webm', { type: 'audio/webm' });
+
+    this.messageService
+      .sendVoiceMessage(
+        this.selectedConversation.otherUserId,
+        file,
+        this.recordingDuration
+      )
+      .subscribe({
+        next: (message) => {
+          // Add the voice message to the chat
+          if (!this.isDuplicateMessage(message)) {
+            this.messages.push(message);
+            this.cdr.detectChanges();
+            setTimeout(() => this.scrollToBottom(), 100);
+          }
+
+          // Update conversation last message
+          if (this.selectedConversation) {
+            this.selectedConversation.lastMessage = message.content;
+            this.selectedConversation.lastMessageTime = message.messageSent;
+            this.selectedConversation.unreadCount = 0;
+          }
+        },
+        error: (error) => {
+          console.error('Error sending voice message:', error);
+          alert('Failed to send voice message. Please try again.');
+        },
+      });
+  }
+
+  formatRecordingDuration(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  isVoiceMessage(message: MessageDto): boolean {
+    return message.messageType === 'voice' || !!message.voiceUrl;
+  }
+
+  playVoiceMessage(message: MessageDto) {
+    if (!message.voiceUrl) return;
+
+    const audio = new Audio(message.voiceUrl);
+    audio.play().catch((error) => {
+      console.error('Error playing voice message:', error);
+      alert('Could not play voice message. Please try again.');
+    });
+  }
+
+  toggleVoicePlayback(message: MessageDto) {
+    if (!message.voiceUrl) return;
+
+    // If this message is currently playing, pause it
+    if (this.isVoicePlaying(message)) {
+      this.stopVoicePlayback();
+      return;
+    }
+
+    // Stop any currently playing audio
+    this.stopVoicePlayback();
+
+    // Start playing this message
+    this.currentlyPlayingAudio = new Audio(message.voiceUrl);
+    this.playingMessageId = message.id;
+
+    this.currentlyPlayingAudio.addEventListener('ended', () => {
+      this.playingMessageId = null;
+      this.currentlyPlayingAudio = null;
+      this.cdr.detectChanges();
+    });
+
+    this.currentlyPlayingAudio.play().catch((error) => {
+      console.error('Error playing voice message:', error);
+      alert('Could not play voice message. Please try again.');
+      this.playingMessageId = null;
+      this.currentlyPlayingAudio = null;
+    });
+
+    this.cdr.detectChanges();
+  }
+
+  isVoicePlaying(message: MessageDto): boolean {
+    return (
+      this.playingMessageId === message.id &&
+      this.currentlyPlayingAudio !== null
+    );
+  }
+
+  private stopVoicePlayback() {
+    if (this.currentlyPlayingAudio) {
+      this.currentlyPlayingAudio.pause();
+      this.currentlyPlayingAudio = null;
+    }
+    this.playingMessageId = null;
+    this.cdr.detectChanges();
+  }
+
+  getWaveformBars(duration: number): number[] {
+    // Use cached waveform if available
+    if (this.waveformCache.has(duration)) {
+      return this.waveformCache.get(duration)!;
+    }
+
+    // Generate a simple waveform visualization
+    const barCount = Math.min(20, Math.max(5, Math.floor(duration / 2)));
+    const bars = Array.from(
+      { length: barCount },
+      () => Math.random() * 0.8 + 0.2
+    );
+
+    // Cache the result for this duration
+    this.waveformCache.set(duration, bars);
+
+    return bars;
   }
 }

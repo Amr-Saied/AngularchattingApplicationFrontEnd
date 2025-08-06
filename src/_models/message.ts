@@ -8,6 +8,9 @@ export interface MessageDto {
   recipientPhotoUrl?: string;
   content: string;
   emoji?: string;
+  voiceUrl?: string;
+  voiceDuration?: number;
+  messageType?: string;
   messageSent: Date;
   dateRead?: Date;
 }

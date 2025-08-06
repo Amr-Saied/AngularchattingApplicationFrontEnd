@@ -46,7 +46,21 @@ export class NavigationService {
    */
   navigateToMessagesWithHistory(queryParams: any, previousPage: string): void {
     this.setPreviousPage(previousPage);
-    this.router.navigate(['/messages'], { queryParams });
+
+    // Navigate to messages without replacing URL to maintain proper navigation history
+    this.router
+      .navigate(['/messages'], {
+        queryParams,
+      })
+      .then(() => {
+        // Navigation successful
+      })
+      .catch((error) => {
+        console.error(
+          'NavigationService: Error navigating to messages:',
+          error
+        );
+      });
   }
 
   /**

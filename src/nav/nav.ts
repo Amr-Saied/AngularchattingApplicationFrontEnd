@@ -1,24 +1,33 @@
 // nav.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { AccountService } from '../_services/account.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { LoggedUser } from '../_models/logged-user';
 import { ToastrService } from 'ngx-toastr';
 import { DefaultPhotoService } from '../_services/default-photo.service';
 import { MemberService } from '../_services/member.service';
 import { Member } from '../_models/member';
 import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import { LoginFormsComponent } from './login-forms.component';
+import { LanguageSwitcher } from './LanguageSwitcher/language-switcher';
+import { TranslationService } from '../_services/translation.service';
 
 @Component({
   selector: 'app-nav',
   standalone: true,
   templateUrl: './nav.html',
   styleUrls: ['./nav.css'],
-  imports: [CommonModule, RouterModule, ThemeToggle, LoginFormsComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    LoginFormsComponent,
+    ThemeToggle,
+    LanguageSwitcher,
+  ],
 })
-export class Nav implements OnInit {
+export class Nav implements OnInit, AfterViewInit {
+  @ViewChild(LoginFormsComponent) loginFormsComponent!: LoginFormsComponent;
+
   loggedIn = false;
   currentUser: Member | null = null;
   showLoginModal = false;
@@ -28,7 +37,8 @@ export class Nav implements OnInit {
     private router: Router,
     private toastr: ToastrService,
     private defaultPhotoService: DefaultPhotoService,
-    private memberService: MemberService
+    private memberService: MemberService,
+    public translationService: TranslationService // Make it public so template can access it
   ) {}
 
   ngOnInit() {
@@ -40,6 +50,13 @@ export class Nav implements OnInit {
         this.currentUser = null;
       }
     });
+  }
+
+  ngAfterViewInit() {
+    // Ensure login form is properly initialized when view is ready
+    if (this.loginFormsComponent) {
+      this.loginFormsComponent.onLoginFormVisible();
+    }
   }
 
   loadCurrentUser() {
@@ -59,6 +76,26 @@ export class Nav implements OnInit {
   // Show login modal
   showLogin() {
     this.showLoginModal = true;
+    // Give the modal time to render, then notify the login form
+    setTimeout(() => {
+      if (this.loginFormsComponent) {
+        this.loginFormsComponent.onLoginFormVisible();
+      }
+    }, 200); // Increased delay to ensure modal is fully rendered
+  }
+
+  // Handle modal shown event
+  onModalShown() {
+    if (this.loginFormsComponent) {
+      this.loginFormsComponent.onLoginFormVisible();
+    }
+  }
+
+  // Handle login form ready event
+  onLoginFormReady() {
+    if (this.loginFormsComponent) {
+      this.loginFormsComponent.onLoginFormVisible();
+    }
   }
 
   // Handle login success
@@ -92,23 +129,12 @@ export class Nav implements OnInit {
   }
 
   getLoggedUsername(): string {
-    const loggedUser = this.accountService.getLoggedUserFromStorage();
-    return loggedUser?.username || 'User';
+    return this.currentUser?.userName || this.currentUser?.knownAs || 'User';
   }
 
   getProfileImageUrl(): string {
-    if (!this.currentUser) {
-      return this.defaultPhotoService.getDefaultProfileImage();
-    }
     return this.defaultPhotoService.getProfileImageUrl(
-      this.currentUser.photoUrl
+      this.currentUser?.photoUrl
     );
-  }
-
-  onExploreMembersClick() {
-    // Notify service that Explore Members was clicked
-    this.memberService.notifyExploreMembersClicked();
-    // Navigate to members page
-    this.router.navigate(['/members']);
   }
 }

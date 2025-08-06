@@ -24,6 +24,19 @@
             >
             </app-text-input>
 
+            <!-- Email Field -->
+            <app-text-input
+              label="Email"
+              fieldName="email"
+              type="email"
+              placeholder="Enter your email address"
+              icon="fas fa-envelope"
+              [isRequired]="true"
+              [errorMessage]="getFieldError('email')"
+              formControlName="email"
+            >
+            </app-text-input>
+
             <!-- Password Field -->
             <app-text-input
               label="Password"

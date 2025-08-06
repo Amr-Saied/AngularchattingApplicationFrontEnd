@@ -116,7 +116,38 @@
         </div>
 
         <div class="message-content">
-          <p>
+          <!-- Voice Message -->
+          <div *ngIf="isVoiceMessage(message)" class="voice-message">
+            <div class="voice-message-bubble">
+              <button
+                class="play-voice-btn"
+                (click)="toggleVoicePlayback(message)"
+                [class.playing]="isVoicePlaying(message)"
+              >
+                <span *ngIf="!isVoicePlaying(message)">▶️</span>
+                <span *ngIf="isVoicePlaying(message)">⏸️</span>
+              </button>
+              <div class="voice-waveform">
+                <div class="waveform-bars">
+                  <div
+                    class="waveform-bar"
+                    *ngFor="
+                      let bar of getWaveformBars(message.voiceDuration || 0)
+                    "
+                  ></div>
+                </div>
+              </div>
+              <span class="voice-duration">{{
+                formatRecordingDuration(message.voiceDuration || 0)
+              }}</span>
+            </div>
+            <p class="voice-message-text" *ngIf="message.content">
+              {{ message.content }}
+            </p>
+          </div>
+
+          <!-- Text Message -->
+          <p *ngIf="!isVoiceMessage(message)">
             {{ message.content }}
             <span *ngIf="message.emoji" class="emoji">{{ message.emoji }}</span>
           </p>
@@ -172,7 +203,26 @@
       </div>
     </div>
 
-    <div class="message-input">
+    <!-- Voice Recording UI -->
+    <div *ngIf="isRecording" class="voice-recording-container">
+      <div class="voice-recording-indicator">
+        <div class="recording-dot"></div>
+        <span class="recording-text">Recording...</span>
+        <span class="recording-duration">{{
+          formatRecordingDuration(recordingDuration)
+        }}</span>
+      </div>
+      <div class="voice-recording-actions">
+        <button (click)="stopVoiceRecording()" class="stop-recording-btn">
+          Stop & Send
+        </button>
+        <button (click)="cancelVoiceRecording()" class="cancel-recording-btn">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div class="message-input" *ngIf="!isRecording">
       <input
         type="text"
         [(ngModel)]="newMessageContent"
@@ -181,14 +231,24 @@
         (input)="onMessageInput()"
         class="message-text-input"
       />
-      <button
-        type="button"
-        (click)="toggleEmojiPicker($event)"
-        class="emoji-button"
-      >
-        😊
-      </button>
-      <button (click)="sendMessage()" class="send-button">Send</button>
+      <div class="input-buttons">
+        <button
+          type="button"
+          (click)="toggleEmojiPicker($event)"
+          class="emoji-button"
+        >
+          😊
+        </button>
+        <button
+          type="button"
+          (click)="startVoiceRecording()"
+          class="voice-button"
+          title="Record voice message"
+        >
+          🎤
+        </button>
+        <button (click)="sendMessage()" class="send-button">Send</button>
+      </div>
     </div>
 
     <!-- Emoji Picker -->
@@ -209,6 +269,34 @@
             {{ emoji }}
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="cancelDelete()">
+  <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Delete Message</h3>
+      <button class="modal-close" (click)="cancelDelete()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <p><strong>Are you sure you want to delete this message?</strong></p>
+        <p>This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="cancelDelete()"
+        >
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+          Delete
+        </button>
       </div>
     </div>
   </div>

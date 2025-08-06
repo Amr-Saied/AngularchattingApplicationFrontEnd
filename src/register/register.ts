@@ -44,6 +44,7 @@ export class Register {
             Validators.pattern(/^[a-zA-Z0-9_]+$/),
           ],
         ],
+        email: ['', [Validators.required, Validators.email]],
         password: [
           '',
           [
@@ -62,6 +63,21 @@ export class Register {
       },
       { validators: this.passwordMatchValidator }
     );
+
+    // Clear server errors when user starts typing
+    this.registerForm.get('username')?.valueChanges.subscribe(() => {
+      const usernameField = this.registerForm.get('username');
+      if (usernameField?.errors?.['serverError']) {
+        usernameField.setErrors(null);
+      }
+    });
+
+    this.registerForm.get('email')?.valueChanges.subscribe(() => {
+      const emailField = this.registerForm.get('email');
+      if (emailField?.errors?.['serverError']) {
+        emailField.setErrors(null);
+      }
+    });
   }
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
@@ -83,8 +99,11 @@ export class Register {
       this.isLoading = true;
       const model: RegisterModel = {
         Username: this.registerForm.get('username')?.value,
+        Email: this.registerForm.get('email')?.value,
         Password: this.registerForm.get('password')?.value,
-        DateOfBirth: this.registerForm.get('dateOfBirth')?.value,
+        DateOfBirth: new Date(
+          this.registerForm.get('dateOfBirth')?.value
+        ).toISOString(),
         KnownAs: this.registerForm.get('knownAs')?.value || undefined,
         Gender: this.registerForm.get('gender')?.value,
         City: this.registerForm.get('city')?.value || undefined,
@@ -101,15 +120,43 @@ export class Register {
           this.router.navigateByUrl('/members');
         },
         error: (error) => {
-          this.toastr.error(
-            'Registration failed. Please try again.',
-            'Registration Failed',
-            {
+          let errorMessage = 'Registration failed. Please try again.';
+
+          if (error.error) {
+            if (typeof error.error === 'string') {
+              errorMessage = error.error;
+              // Check for specific validation errors
+              if (errorMessage.toLowerCase().includes('username is taken')) {
+                const usernameField = this.registerForm.get('username');
+                usernameField?.setErrors({ serverError: errorMessage });
+                usernameField?.markAsTouched();
+                usernameField?.markAsDirty();
+              } else if (
+                errorMessage
+                  .toLowerCase()
+                  .includes('email is already registered')
+              ) {
+                const emailField = this.registerForm.get('email');
+                emailField?.setErrors({ serverError: errorMessage });
+                emailField?.markAsTouched();
+                emailField?.markAsDirty();
+              }
+            } else if (error.error.message) {
+              errorMessage = error.error.message;
+            }
+          }
+
+          // Don't show toastr for field-specific errors, let the field show the error
+          if (
+            !errorMessage.toLowerCase().includes('username is taken') &&
+            !errorMessage.toLowerCase().includes('email is already registered')
+          ) {
+            this.toastr.error(errorMessage, 'Registration Failed', {
               timeOut: 8000,
               closeButton: true,
               progressBar: true,
-            }
-          );
+            });
+          }
         },
         complete: () => {
           this.isLoading = false;
@@ -125,7 +172,11 @@ export class Register {
 
   getFieldError(fieldName: string): string {
     const field = this.registerForm.get(fieldName);
-    if (field?.invalid && field?.touched) {
+    if (field?.invalid && (field?.touched || field?.dirty)) {
+      // Check for server errors first
+      if (field.errors?.['serverError']) {
+        return field.errors['serverError'];
+      }
       if (field.errors?.['required']) {
         return `${
           fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
@@ -150,6 +201,9 @@ export class Register {
         if (fieldName === 'password') {
           return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
         }
+      }
+      if (field.errors?.['email']) {
+        return 'Please enter a valid email address';
       }
     }
     return '';

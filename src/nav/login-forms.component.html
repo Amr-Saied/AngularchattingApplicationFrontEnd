@@ -94,19 +94,9 @@
     </button>
 
     <!-- Google Login Button -->
-    <button
-      type="button"
-      class="btn btn-outline-dark w-100 mb-3"
-      (click)="googleLogin()"
-      [disabled]="isGoogleLoading"
-    >
-      <span
-        *ngIf="isGoogleLoading"
-        class="spinner-border spinner-border-sm me-2"
-      ></span>
-      <i class="fab fa-google me-2" *ngIf="!isGoogleLoading"></i>
-      {{ isGoogleLoading ? "Connecting..." : "Continue with Google" }}
-    </button>
+    <div class="google-signin-wrapper mb-3">
+      <div id="google-signin-button"></div>
+    </div>
 
     <!-- Help Links -->
     <div class="help-links text-center">

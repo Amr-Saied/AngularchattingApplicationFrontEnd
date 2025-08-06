@@ -67,7 +67,9 @@ export class AccountService implements OnDestroy {
 
   // Resend Confirmation Email
   resendConfirmationEmail(email: string) {
-    return this.http.post(this.baseUrl + '/ResendConfirmation', email);
+    return this.http.post(this.baseUrl + '/ResendConfirmation', {
+      email: email,
+    });
   }
 
   register(model: any) {
@@ -91,7 +93,26 @@ export class AccountService implements OnDestroy {
 
   // Check if user is logged in
   isLoggedIn(): boolean {
-    return this.getLoggedUserFromStorage() !== null;
+    const loggedUser = this.getLoggedUserFromStorage();
+    const isLoggedIn = loggedUser !== null;
+
+    // Add additional validation to prevent race conditions
+    if (isLoggedIn && loggedUser) {
+      // Check if token exists and is not empty
+      if (!loggedUser.token || loggedUser.token.trim() === '') {
+        this.clearLoggedUserFromStorage();
+        return false;
+      }
+
+      // Basic JWT validation (check if it has 3 parts)
+      const tokenParts = loggedUser.token.split('.');
+      if (tokenParts.length !== 3) {
+        this.clearLoggedUserFromStorage();
+        return false;
+      }
+    }
+
+    return isLoggedIn;
   }
 
   // Clear logged user data from local storage

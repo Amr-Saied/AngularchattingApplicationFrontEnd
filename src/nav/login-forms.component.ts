@@ -4,6 +4,7 @@ import {
   Output,
   OnInit,
   OnDestroy,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -14,7 +15,7 @@ import {
 } from '@angular/forms';
 import { AccountService } from '../_services/account.service';
 import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { LoggedUser } from '../_models/logged-user';
 import { ThemeService } from '../_services/theme.service';
 import { environment } from '../environments/environment';
@@ -26,9 +27,10 @@ import { environment } from '../environments/environment';
   templateUrl: './login-forms.component.html',
   styleUrls: ['./login-forms.component.css'],
 })
-export class LoginFormsComponent implements OnInit, OnDestroy {
+export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
   @Output() loginSuccess = new EventEmitter<any>();
   @Output() closeModal = new EventEmitter<void>();
+  @Output() formReady = new EventEmitter<void>();
 
   // Form states
   showForgotPassword = false;
@@ -50,22 +52,32 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
   // Reset password token
   resetToken: string = '';
 
-  // Google Sign-In
-  private googleInitialized = false;
-
   constructor(
     private fb: FormBuilder,
     private accountService: AccountService,
     private toastr: ToastrService,
     private router: Router,
+    private route: ActivatedRoute,
     public themeService: ThemeService
   ) {
     this.initializeForms();
-    this.checkForResetToken();
   }
 
   ngOnInit() {
+    this.initializeForms();
+
+    // Initialize Google Sign-In
     this.initializeGoogleSignIn();
+
+    // Watch for URL parameter changes
+    this.route.queryParams.subscribe((params) => {
+      this.checkForResetToken();
+    });
+  }
+
+  ngAfterViewInit() {
+    // Emit form ready event
+    this.formReady.emit();
   }
 
   ngOnDestroy() {
@@ -76,21 +88,6 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
     ) {
       (window as any).google.accounts.id.disableAutoSelect();
     }
-  }
-
-  private initializeGoogleSignIn() {
-    // Wait for Google Sign-In script to load
-    const checkGoogleLoaded = () => {
-      if (
-        typeof (window as any).google !== 'undefined' &&
-        (window as any).google.accounts
-      ) {
-        this.googleInitialized = true;
-      } else {
-        setTimeout(checkGoogleLoaded, 100);
-      }
-    };
-    checkGoogleLoaded();
   }
 
   private initializeForms() {
@@ -121,10 +118,33 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
   private checkForResetToken() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const error = urlParams.get('error');
+    const username = urlParams.get('username');
+
     if (token) {
       this.resetToken = token;
       this.showResetPassword = true;
       this.resetPasswordForm.patchValue({ token });
+    } else if (error === 'email_exists' && username) {
+      // Handle email exists error from Google callback
+      this.toastr.error(
+        `An account with this email already exists. Please use your username (${username}) and password to login, or use a different Google account.`,
+        'Email Already Exists',
+        {
+          timeOut: 10000,
+          closeButton: true,
+          progressBar: true,
+        }
+      );
+      // Clear URL parameters
+      this.router.navigate(['/'], { replaceUrl: true });
+    } else {
+      // Clear any existing URL parameters if no token found
+      if (window.location.search) {
+        this.router.navigate(['/'], { replaceUrl: true });
+      }
+      // Ensure we're showing the login form, not reset password
+      this.showResetPassword = false;
     }
   }
 
@@ -152,66 +172,40 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Google Login
-  googleLogin() {
-    this.isGoogleLoading = true;
-
-    if (!this.googleInitialized) {
-      this.toastr.error(
-        'Google Sign-In is not ready yet. Please try again.',
-        'Error'
-      );
-      this.isGoogleLoading = false;
-      return;
-    }
-
-    if (
-      typeof (window as any).google !== 'undefined' &&
-      (window as any).google.accounts
-    ) {
-      try {
-        (window as any).google.accounts.id.initialize({
-          client_id: environment.googleClientId,
-          callback: this.handleGoogleSignIn.bind(this),
-        });
-
-        (window as any).google.accounts.id.prompt();
-      } catch (error) {
-        console.error('Google Sign-In initialization error:', error);
-        this.toastr.error('Failed to initialize Google Sign-In', 'Error');
-        this.isGoogleLoading = false;
-      }
-    } else {
-      this.toastr.error('Google Sign-In is not available', 'Error');
-      this.isGoogleLoading = false;
-    }
-  }
+  // Google Login - Now handled by Google's official button
+  // googleLogin() method removed - using Google's official sign-in button instead
 
   private handleGoogleSignIn(response: any) {
+    console.log('Angular handleGoogleSignIn called:', response);
     this.isGoogleLoading = false;
 
     // Decode the JWT token to get user information
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      console.log('Decoded payload:', payload);
 
       const googleLoginDto = {
-        googleId: response.credential,
+        googleId: payload.sub, // Use the 'sub' field which is the Google ID
         email: payload.email,
         name: payload.name,
         picture: payload.picture,
       };
 
+      console.log('Sending Google login DTO:', googleLoginDto);
+
       this.accountService.googleLogin(googleLoginDto).subscribe({
         next: (response: any) => {
+          console.log('Google login successful:', response);
           this.handleLoginSuccess(response);
         },
         error: (error) => {
+          console.log('Google login error:', error);
           this.handleLoginError(error);
         },
       });
     } catch (error) {
+      console.error('Failed to process Google Sign-In response:', error);
       this.toastr.error('Failed to process Google Sign-In response', 'Error');
-      console.error('Error processing Google response:', error);
     }
   }
 
@@ -299,9 +293,17 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
       this.accountService.resetPassword(resetDto).subscribe({
         next: (response: any) => {
           this.isLoading = false;
+          this.accountService.clearLoggedUserFromStorage();
           this.toastr.success(response.message, 'Password Reset');
           this.showResetPassword = false;
           this.resetPasswordForm.reset();
+          // Show login form/modal
+          this.showForgotPassword = false;
+          this.showForgotUsername = false;
+          this.showResendConfirmation = false;
+          this.showResetPassword = false;
+          // Optionally, set a flag to show login form if needed
+          // this.showLoginForm();
         },
         error: (error) => {
           this.isLoading = false;
@@ -358,6 +360,12 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
       });
       this.showResendConfirmation = true;
       this.resendConfirmationForm.patchValue({ email: error.error.email });
+    } else if (error.error?.error === 'EMAIL_ALREADY_EXISTS') {
+      this.toastr.error(error.error.message, 'Email Already Exists', {
+        timeOut: 8000,
+        closeButton: true,
+        progressBar: true,
+      });
     } else {
       this.toastr.error(
         'Login failed. Please check your credentials.',
@@ -402,9 +410,67 @@ export class LoginFormsComponent implements OnInit, OnDestroy {
     this.showResendConfirmation = false;
     this.showResetPassword = false;
     this.loginForm.reset();
+
+    // Clear reset token state
+    this.resetToken = '';
+    this.resetPasswordForm.reset();
   }
 
   close() {
     this.closeModal.emit();
+  }
+
+  // Method to be called when the login form becomes visible
+  onLoginFormVisible() {
+    // Force Google button to render after modal is visible
+    setTimeout(() => {
+      this.renderGoogleButton();
+    }, 0); // Reduced delay for faster button appearance
+  }
+
+  private initializeGoogleSignIn() {
+    // Wait for Google Sign-In library to load
+    const checkGoogleLoaded = () => {
+      if (
+        typeof (window as any).google !== 'undefined' &&
+        (window as any).google.accounts &&
+        (window as any).google.accounts.id
+      ) {
+        // Initialize Google Sign-In
+        (window as any).google.accounts.id.initialize({
+          client_id: environment.googleClientId,
+          callback: this.handleGoogleSignIn.bind(this),
+        });
+
+        // Render the button when the form becomes visible
+        this.renderGoogleButton();
+      } else {
+        // Check again in 100ms
+        setTimeout(checkGoogleLoaded, 100);
+      }
+    };
+
+    checkGoogleLoaded();
+  }
+
+  private renderGoogleButton() {
+    const googleButton = document.getElementById('google-signin-button');
+    if (googleButton && typeof (window as any).google !== 'undefined') {
+      // Clear any existing content
+      googleButton.innerHTML = '';
+
+      try {
+        (window as any).google.accounts.id.renderButton(googleButton, {
+          type: 'standard',
+          size: 'large',
+          theme: 'outline',
+          text: 'sign_in_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+        });
+      } catch (error) {
+        console.warn('Failed to render Google button:', error);
+      }
+    }
   }
 }

@@ -58,6 +58,20 @@ export class MessageService {
     }
     return this.http.post<MessageDto>(`${this.baseUrl}`, messageDto);
   }
+
+  // Send voice message
+  sendVoiceMessage(
+    recipientId: number,
+    voiceFile: File,
+    duration: number
+  ): Observable<MessageDto> {
+    const formData = new FormData();
+    formData.append('recipientId', recipientId.toString());
+    formData.append('voiceFile', voiceFile);
+    formData.append('duration', duration.toString());
+
+    return this.http.post<MessageDto>(`${this.baseUrl}/voice`, formData);
+  }
   // Mark message as read
   markAsRead(messageId: number): Observable<boolean> {
     return this.http

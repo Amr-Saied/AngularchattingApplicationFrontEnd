@@ -101,15 +101,9 @@ export class MemberDetail implements OnInit {
       }
       // If coming from other pages, keep default '/members'
     }
-
-    console.log(
-      'Detected previous page for messages navigation:',
-      this.previousPageForMessages
-    );
   }
 
   loadMember(id: number) {
-    console.log(`Loading member ID ${id}...`);
     this.memberService.getMemberById(id).subscribe({
       next: (member) => {
         this.member = member;
@@ -117,7 +111,6 @@ export class MemberDetail implements OnInit {
         this.initGallery();
         this.loadLikeData();
         this.checkIfOwnProfile();
-        console.log(`Member data loaded for ID: ${id}`);
       },
       error: () => {
         this.loading = false;
@@ -263,13 +256,11 @@ export class MemberDetail implements OnInit {
   // Cache is now handled by @ngneat/cashew in the service layer
   clearCache(): void {
     // Cache clearing is now handled automatically by the library
-    console.log('Cache is managed by @ngneat/cashew library');
   }
 
   // Method to get cache info (useful for debugging)
   getCacheInfo(): { size: number; keys: number[] } {
     // Cache info is now managed by the library
-    console.log('Cache info is managed by @ngneat/cashew library');
     return { size: 0, keys: [] };
   }
 

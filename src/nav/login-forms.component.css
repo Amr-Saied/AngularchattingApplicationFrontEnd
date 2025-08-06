@@ -200,6 +200,83 @@
   }
 }
 
+/* Google Sign-In Button Styles */
+.google-signin-wrapper {
+  margin: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 40px; /* Ensure minimum height */
+}
+
+.google-signin-wrapper .g_id_signin {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 40px; /* Ensure minimum height */
+}
+
+/* Ensure Google button is visible and full width */
+.g_id_signin > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 40px !important; /* Force minimum height */
+}
+
+/* Force the Google button container to be visible */
+#google-signin-button {
+  min-height: 40px !important;
+  display: block !important;
+  visibility: visible !important;
+  width: 100% !important;
+}
+
+/* Make Google button match login button width */
+#google-signin-button > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#google-signin-button > div > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#google-signin-button > div > div > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#google-signin-button > div > div > div > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Specific selector for the Google button container */
+#google-signin-button
+  > div
+  > div
+  > div
+  > div.nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+}
+
+/* Ensure the Google button itself stretches to full width */
+#google-signin-button > div > div > div > div > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Dark theme adjustments for Google button */
+.dark-theme .google-signin-wrapper {
+  background-color: var(--bg-primary);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
+
 /* Loading state styles */
 .btn:disabled {
   cursor: not-allowed;

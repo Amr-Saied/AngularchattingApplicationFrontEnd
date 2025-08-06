@@ -556,14 +556,14 @@ textarea.form-control {
 }
 
 /* Warning Styles */
-.ban-warning,
-.delete-warning {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
+.ban-warning {
+  background: #f8d7da;
+  border: 2px solid #dc3545;
   border-radius: 5px;
   padding: 15px;
   margin: 15px 0;
-  color: #856404;
+  color: #721c24;
+  font-weight: 500;
 }
 
 .delete-warning {
@@ -571,6 +571,19 @@ textarea.form-control {
   border: 2px solid #dc3545;
   color: #721c24;
   font-weight: 500;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.ban-warning p {
+  color: #721c24 !important;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.ban-warning strong {
+  color: #dc3545 !important;
+  font-weight: bold;
 }
 
 .delete-warning p {
@@ -595,9 +608,10 @@ textarea.form-control {
 
 /* Dark mode warning styles */
 .dark-theme .ban-warning {
-  background: rgba(255, 193, 7, 0.1);
-  border: 1px solid rgba(255, 193, 7, 0.3);
-  color: #ffc107;
+  background: rgba(220, 53, 69, 0.1);
+  border: 2px solid rgba(220, 53, 69, 0.5);
+  color: #ff6b6b !important;
+  font-weight: bold;
 }
 
 .dark-theme .delete-warning {

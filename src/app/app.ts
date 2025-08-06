@@ -72,7 +72,10 @@ export class App implements OnInit, OnDestroy {
             'Cannot start a HubConnection that is not in the'
           )
         ) {
-          console.error('SignalR connection failed:', error);
+          console.warn(
+            'SignalR connection failed, but continuing without real-time features:',
+            error.message
+          );
         }
       });
   }
