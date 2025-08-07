@@ -85,7 +85,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   checkAdminRole(): void {
-    const user = this.accountService.getLoggedUserFromStorage();
+    const user = this.accountService.getLoggedUserFromStorageSync();
     if (!user || user.role !== 'Admin') {
       // Redirect to home if not admin
       window.location.href = '/';
@@ -231,7 +231,6 @@ export class AdminComponent implements OnInit, OnDestroy {
           this.adminUsers[index] = updatedUser;
         }
         this.closeEditModal();
-        console.log('User updated successfully');
       },
       error: (error: any) => {
         console.error('Error updating user:', error);
@@ -274,7 +273,6 @@ export class AdminComponent implements OnInit, OnDestroy {
           this.banningUser.banExpiryDate = this.banForm.banExpiryDate;
         }
         this.closeBanModal();
-        console.log('User banned successfully');
       },
       error: (error: any) => {
         console.error('Error banning user:', error);
@@ -289,7 +287,6 @@ export class AdminComponent implements OnInit, OnDestroy {
         user.banReason = undefined;
         user.banExpiryDate = undefined;
         user.isPermanentBan = false;
-        console.log('User unbanned successfully');
       },
       error: (error: any) => {
         console.error('Error unbanning user:', error);
@@ -317,7 +314,6 @@ export class AdminComponent implements OnInit, OnDestroy {
           (u) => u.id !== this.deletingUser?.id
         );
         this.closeDeleteModal();
-        console.log('User deleted successfully');
       },
       error: (error: any) => {
         console.error('Error deleting user:', error);
@@ -336,7 +332,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.adminService.refreshBanStatus().subscribe({
       next: () => {
         this.loadAdminUsers();
-        console.log('Ban status refreshed');
       },
       error: (error: any) => {
         console.error('Error refreshing ban status:', error);

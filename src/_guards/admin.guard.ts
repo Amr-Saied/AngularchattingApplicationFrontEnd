@@ -15,7 +15,7 @@ export class AdminGuard implements CanActivate {
 
   canActivate(): boolean {
     if (this.accountService.isLoggedIn()) {
-      const user = this.accountService.getLoggedUserFromStorage();
+      const user = this.accountService.getLoggedUserFromStorageSync();
       if (user?.role === 'Admin') {
         return true;
       } else {

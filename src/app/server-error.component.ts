@@ -86,7 +86,7 @@ export class ServerErrorComponent {
   error: any;
 
   constructor(private router: Router, private accountService: AccountService) {
-    const user = this.accountService.getLoggedUserFromStorage();
+    const user = this.accountService.getLoggedUserFromStorageSync();
     this.isAdmin = !!user && user.role === 'Admin';
     // Get error details from navigation state
     const nav = this.router.getCurrentNavigation();

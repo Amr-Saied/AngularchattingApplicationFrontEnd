@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BanStatusResponse } from '../_models/ban-status-response';
 import { SignalRService } from './signalr.service';
+import { EncryptionService } from './encryption.service';
 
 @Injectable({
   providedIn: 'root',
@@ -21,7 +22,8 @@ export class AccountService implements OnDestroy {
     private http: HttpClient,
     private router: Router,
     private toastr: ToastrService,
-    private signalRService: SignalRService
+    private signalRService: SignalRService,
+    private encryptionService: EncryptionService
   ) {
     // Initialize login state
     this.loginStateSubject.next(this.isLoggedIn());
@@ -76,24 +78,42 @@ export class AccountService implements OnDestroy {
     return this.http.post(this.baseUrl + '/Register', model);
   }
 
-  // Save logged user data to local storage
-  saveLoggedUserToStorage(loggedUser: LoggedUser) {
-    localStorage.setItem(this.LOGGED_USER_KEY, JSON.stringify(loggedUser));
+  // Save logged user data to secure storage
+  async saveLoggedUserToStorage(loggedUser: LoggedUser) {
+    // Ensure we have the required fields
+    const userToStore: LoggedUser = {
+      id: loggedUser.id,
+      username: loggedUser.username,
+      token: loggedUser.token,
+      refreshToken: loggedUser.refreshToken,
+      role: loggedUser.role,
+      tokenExpires: loggedUser.tokenExpires,
+      refreshTokenExpires: loggedUser.refreshTokenExpires,
+    };
+
+    await this.encryptionService.setSecureItem(
+      this.LOGGED_USER_KEY,
+      userToStore
+    );
     this.loginStateSubject.next(true);
 
     // Setup SignalR ban listeners for real-time notifications
     this.setupBanListeners();
   }
 
-  // Get logged user from local storage
-  getLoggedUserFromStorage(): LoggedUser | null {
-    const userStr = localStorage.getItem(this.LOGGED_USER_KEY);
-    return userStr ? JSON.parse(userStr) : null;
+  // Get logged user from secure storage
+  async getLoggedUserFromStorage(): Promise<LoggedUser | null> {
+    return await this.encryptionService.getSecureItem(this.LOGGED_USER_KEY);
+  }
+
+  // Synchronous version for backward compatibility
+  getLoggedUserFromStorageSync(): LoggedUser | null {
+    return this.encryptionService.getSecureItemSync(this.LOGGED_USER_KEY);
   }
 
   // Check if user is logged in
   isLoggedIn(): boolean {
-    const loggedUser = this.getLoggedUserFromStorage();
+    const loggedUser = this.getLoggedUserFromStorageSync();
     const isLoggedIn = loggedUser !== null;
 
     // Add additional validation to prevent race conditions
@@ -115,9 +135,9 @@ export class AccountService implements OnDestroy {
     return isLoggedIn;
   }
 
-  // Clear logged user data from local storage
+  // Clear logged user data from secure storage
   clearLoggedUserFromStorage() {
-    localStorage.removeItem(this.LOGGED_USER_KEY);
+    this.encryptionService.removeSecureItem(this.LOGGED_USER_KEY);
     this.loginStateSubject.next(false);
     // No need to stop SignalR listeners as they're connection-based
   }
@@ -129,50 +149,9 @@ export class AccountService implements OnDestroy {
 
   // Get current user ID
   getCurrentUserId(): number | null {
-    // First try to get from stored user data
-    const loggedUser = this.getLoggedUserFromStorage();
-
-    if (loggedUser?.id) {
-      return loggedUser.id;
-    }
-
-    // Fallback: decode user ID from JWT token
-    const token = localStorage.getItem('loggedUser');
-    if (token) {
-      try {
-        const user = JSON.parse(token);
-
-        if (user?.token) {
-          const payload = this.decodeJwtPayload(user.token);
-
-          if (payload?.nameid) {
-            const userId = parseInt(payload.nameid);
-            return userId;
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to decode user ID from token:', error);
-      }
-    }
-
-    return null;
-  }
-
-  // Helper function to decode JWT payload
-  private decodeJwtPayload(token: string): any {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        return null;
-      }
-
-      const payload = parts[1];
-      const decoded = atob(payload);
-      return JSON.parse(decoded);
-    } catch (error) {
-      console.warn('Failed to decode JWT:', error);
-      return null;
-    }
+    // Get from stored user data
+    const loggedUser = this.getLoggedUserFromStorageSync();
+    return loggedUser?.id || null;
   }
 
   // Check if current user is viewing their own profile

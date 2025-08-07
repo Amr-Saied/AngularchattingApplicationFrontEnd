@@ -176,13 +176,11 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
   // googleLogin() method removed - using Google's official sign-in button instead
 
   private handleGoogleSignIn(response: any) {
-    console.log('Angular handleGoogleSignIn called:', response);
     this.isGoogleLoading = false;
 
     // Decode the JWT token to get user information
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      console.log('Decoded payload:', payload);
 
       const googleLoginDto = {
         googleId: payload.sub, // Use the 'sub' field which is the Google ID
@@ -191,15 +189,11 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
         picture: payload.picture,
       };
 
-      console.log('Sending Google login DTO:', googleLoginDto);
-
       this.accountService.googleLogin(googleLoginDto).subscribe({
         next: (response: any) => {
-          console.log('Google login successful:', response);
           this.handleLoginSuccess(response);
         },
         error: (error) => {
-          console.log('Google login error:', error);
           this.handleLoginError(error);
         },
       });
@@ -223,6 +217,7 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.forgotPasswordForm.reset();
         },
         error: (error) => {
+          console.error('Failed to send reset email:', error);
           this.isLoading = false;
           this.toastr.error('Failed to send reset email', 'Error');
         },
@@ -244,6 +239,7 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.forgotUsernameForm.reset();
         },
         error: (error) => {
+          console.error('Failed to send username reminder:', error);
           this.isLoading = false;
           this.toastr.error('Failed to send username reminder', 'Error');
         },
@@ -265,6 +261,7 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
           this.resendConfirmationForm.reset();
         },
         error: (error) => {
+          console.error('Failed to send confirmation email:', error);
           this.isLoading = false;
           this.toastr.error('Failed to send confirmation email', 'Error');
         },
@@ -306,6 +303,7 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
           // this.showLoginForm();
         },
         error: (error) => {
+          console.error('Failed to reset password:', error);
           this.isLoading = false;
           this.toastr.error('Failed to reset password', 'Error');
         },
@@ -320,6 +318,7 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
         id: 0, // Will be decoded from token by account service
         username: response.username,
         token: response.token,
+        refreshToken: response.refreshToken || '',
         role: response.role || 'User',
       };
       this.accountService.saveLoggedUserToStorage(loggedUser);
@@ -347,8 +346,6 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handleLoginError(error: any) {
-    console.log(error);
-
     // Handle ban response from backend using unified method
     if (error.error?.error === 'USER_BANNED') {
       this.accountService.handleBackendBanResponse(error.error);
@@ -470,6 +467,7 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       } catch (error) {
         console.warn('Failed to render Google button:', error);
+        // Google button rendering failed
       }
     }
   }

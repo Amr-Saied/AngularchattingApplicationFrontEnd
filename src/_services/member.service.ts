@@ -98,4 +98,17 @@ export class MemberService {
       this.baseUrl + '/GetLastActiveStatus/' + userId
     );
   }
+
+  checkUsernameAvailability(username: string): Observable<{ isAvailable: boolean; username: string }> {
+    return this.http.get<{ isAvailable: boolean; username: string }>(
+      environment.apiUrl + 'Account/CheckUsernameAvailability/' + username
+    );
+  }
+
+  updateUsername(currentUsername: string, newUsername: string): Observable<{ message: string; newUsername: string }> {
+    return this.http.post<{ message: string; newUsername: string }>(
+      environment.apiUrl + 'Account/UpdateUsername',
+      { currentUsername, newUsername }
+    );
+  }
 }

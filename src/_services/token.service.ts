@@ -1,27 +1,36 @@
 import { Injectable } from '@angular/core';
 import { LoggedUser } from '../_models/logged-user';
+import { EncryptionService } from './encryption.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TokenService {
-  constructor() {}
+  constructor(private encryptionService: EncryptionService) {}
 
   getToken(): string | null {
-    const loggedUser = localStorage.getItem('loggedUser');
+    const loggedUser = this.encryptionService.getSecureItemSync('loggedUser');
     if (loggedUser) {
-      const user = JSON.parse(loggedUser);
-      return user?.token || null;
+      return loggedUser?.token || null;
     }
     return null;
   }
 
   getLoggedUser(): LoggedUser | null {
-    const loggedUser = localStorage.getItem('loggedUser');
-    if (loggedUser) {
-      return JSON.parse(loggedUser);
-    }
-    return null;
+    return this.encryptionService.getSecureItemSync('loggedUser');
+  }
+
+  getRefreshToken(): string | null {
+    const loggedUser = this.encryptionService.getSecureItemSync('loggedUser');
+    return loggedUser?.refreshToken || null;
+  }
+
+  isTokenExpired(): boolean {
+    const loggedUser = this.getLoggedUser();
+    if (!loggedUser?.tokenExpires) return true;
+
+    const expiresAt = new Date(loggedUser.tokenExpires);
+    return expiresAt <= new Date();
   }
 
   isTokenValid(): boolean {

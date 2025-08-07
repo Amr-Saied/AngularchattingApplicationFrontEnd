@@ -60,7 +60,7 @@ export class Nav implements OnInit, AfterViewInit {
   }
 
   loadCurrentUser() {
-    const loggedUser = this.accountService.getLoggedUserFromStorage();
+    const loggedUser = this.accountService.getLoggedUserFromStorageSync();
     if (loggedUser && loggedUser.username) {
       this.memberService.getMemberByUsername(loggedUser.username).subscribe({
         next: (member) => {

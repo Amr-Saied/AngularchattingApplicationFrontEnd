@@ -406,7 +406,7 @@ export class ProfileComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const loggedUser = this.accountService.getLoggedUserFromStorage();
+    const loggedUser = this.accountService.getLoggedUserFromStorageSync();
     if (loggedUser && loggedUser.username) {
       this.memberService.getMemberByUsername(loggedUser.username).subscribe({
         next: (member) => {
@@ -419,7 +419,6 @@ export class ProfileComponent implements OnInit {
         },
       });
     } else {
-      console.warn('No logged-in user found. Displaying default profile data.');
       this.initGallery();
     }
   }
@@ -487,7 +486,6 @@ export class ProfileComponent implements OnInit {
           },
           error: () => {
             this.toastr.error('Failed to upload photo.');
-            console.log('Failed to upload photo.');
           },
         });
     }
@@ -556,7 +554,6 @@ export class ProfileComponent implements OnInit {
         },
         error: () => {
           this.toastr.error('Failed to upload photo.');
-          console.log('Failed to upload photo.');
         },
       });
   }

@@ -173,8 +173,8 @@
   right: 2px;
   width: 16px;
   height: 16px;
-  border: 2px solid white;
   border-radius: 50%;
+  border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
@@ -838,12 +838,19 @@
 
 /* Voice Recording Styles */
 .voice-recording-container {
-  background: var(--card-bg);
-  border: 2px solid var(--accent-color);
+  background: #ffffff;
+  border: 2px solid #667eea;
   border-radius: 12px;
   padding: 15px;
   margin: 10px 20px;
   animation: pulse-recording 2s infinite;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+/* Dark theme override for voice recording container */
+.dark-theme .voice-recording-container {
+  background: #2d2d2d;
+  border-color: #667eea;
 }
 
 .voice-recording-indicator {
@@ -862,14 +869,23 @@
 }
 
 .recording-text {
-  color: var(--text-primary);
+  color: #2d3748;
   font-weight: 500;
 }
 
 .recording-duration {
-  color: var(--text-secondary);
+  color: #4a5568;
   font-family: monospace;
   font-size: 14px;
+}
+
+/* Dark theme overrides for recording text */
+.dark-theme .recording-text {
+  color: #e2e8f0;
+}
+
+.dark-theme .recording-duration {
+  color: #a0aec0;
 }
 
 .voice-recording-actions {
@@ -878,37 +894,54 @@
 }
 
 .stop-recording-btn {
-  background: var(--accent-color);
+  background: #667eea;
   color: white;
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .stop-recording-btn:hover {
-  background: var(--accent-hover);
+  background: #5a67d8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .cancel-recording-btn {
-  background: var(--border-color);
-  color: var(--text-primary);
-  border: none;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .cancel-recording-btn:hover {
-  background: var(--text-secondary);
-  color: white;
+  background: #cbd5e0;
+  color: #2d3748;
+  transform: translateY(-1px);
+}
+
+/* Dark theme overrides for voice recording buttons */
+.dark-theme .cancel-recording-btn {
+  background: #4a5568;
+  color: #e2e8f0;
+  border-color: #718096;
+}
+
+.dark-theme .cancel-recording-btn:hover {
+  background: #718096;
+  color: #f7fafc;
 }
 
 .voice-button {
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border: 2px solid var(--border-color);
+  background: #ffffff;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -920,12 +953,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .voice-button:hover {
-  background: var(--accent-color);
+  background: #667eea;
   color: white;
-  border-color: var(--accent-color);
+  border-color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Dark theme overrides for voice button */
+.dark-theme .voice-button {
+  background: #2d2d2d;
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.dark-theme .voice-button:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
 }
 
 /* Voice Message Styles - WhatsApp Style */
@@ -1088,17 +1137,349 @@
   }
 
   .voice-recording-container {
-    margin: 10px;
-    padding: 12px;
+    padding: 15px;
+    border-radius: 15px;
   }
 
   .voice-recording-actions {
-    flex-direction: column;
+    gap: 10px;
   }
 
   .voice-button {
-    padding: 6px 10px;
+    padding: 12px 20px;
     font-size: 14px;
+  }
+
+  /* Chat window improvements */
+  .chat-window {
+    height: calc(100vh - 120px);
+    margin: 10px;
+    border-radius: 15px;
+  }
+
+  .chat-header {
+    padding: 15px 20px;
+    border-radius: 15px 15px 0 0;
+  }
+
+  .chat-header h2 {
+    font-size: 18px;
+  }
+
+  .back-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .messages-list {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .message-item {
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+
+  .message-avatar-image {
+    width: 35px;
+    height: 35px;
+  }
+
+  .message-content {
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 14px;
+  }
+
+  .message-content p {
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .message-footer {
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  .message-time {
+    font-size: 11px;
+  }
+
+  .delete-message-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .manual-read-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  /* Message input improvements */
+  .message-input {
+    padding: 15px;
+    border-radius: 0 0 15px 15px;
+  }
+
+  .input-buttons {
+    gap: 10px;
+  }
+
+  .message-text-input {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 20px;
+  }
+
+  .send-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    border-radius: 20px;
+  }
+
+  .emoji-button {
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  .voice-button {
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  /* Emoji picker improvements */
+  .emoji-picker-container {
+    bottom: 80px;
+    left: 15px;
+    right: 15px;
+    max-height: 200px;
+  }
+
+  .emoji-picker {
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .emoji-grid {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .emoji-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  /* Voice message improvements */
+  .voice-message-bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    min-width: 120px;
+  }
+
+  .play-voice-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .voice-waveform {
+    gap: 3px;
+    margin: 0 8px;
+  }
+
+  .waveform-bar {
+    width: 2px;
+  }
+
+  .voice-duration {
+    font-size: 11px;
+  }
+
+  .voice-message-text {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .messages-container {
+    padding: 8px;
+    height: calc(100vh - 70px);
+  }
+
+  .chat-window {
+    height: calc(100vh - 100px);
+    margin: 8px;
+    border-radius: 12px;
+  }
+
+  .chat-header {
+    padding: 12px 16px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .chat-header h2 {
+    font-size: 16px;
+  }
+
+  .back-button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .messages-list {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .message-item {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .message-avatar-image {
+    width: 30px;
+    height: 30px;
+  }
+
+  .message-content {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    max-width: 90%;
+  }
+
+  .message-footer {
+    margin-top: 4px;
+    gap: 6px;
+  }
+
+  .message-time {
+    font-size: 10px;
+  }
+
+  .delete-message-btn {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .manual-read-btn {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  /* Message input improvements */
+  .message-input {
+    padding: 12px;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .input-buttons {
+    gap: 8px;
+  }
+
+  .message-text-input {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 18px;
+  }
+
+  .send-button {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 18px;
+  }
+
+  .emoji-button {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .voice-button {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  /* Emoji picker improvements */
+  .emoji-picker-container {
+    bottom: 70px;
+    left: 10px;
+    right: 10px;
+    max-height: 180px;
+  }
+
+  .emoji-picker {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .emoji-grid {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .emoji-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  /* Voice message improvements */
+  .voice-message-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    min-width: 100px;
+  }
+
+  .play-voice-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .voice-waveform {
+    gap: 2px;
+    margin: 0 6px;
+  }
+
+  .waveform-bar {
+    width: 1.5px;
+  }
+
+  .voice-duration {
+    font-size: 10px;
+  }
+
+  .voice-message-text {
+    font-size: 10px;
+  }
+
+  /* Voice recording improvements */
+  .voice-recording-container {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .voice-recording-actions {
+    gap: 8px;
+  }
+
+  .stop-recording-btn,
+  .cancel-recording-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .voice-recording-indicator {
+    gap: 8px;
+  }
+
+  .recording-text {
+    font-size: 12px;
+  }
+
+  .recording-duration {
+    font-size: 11px;
   }
 }
 

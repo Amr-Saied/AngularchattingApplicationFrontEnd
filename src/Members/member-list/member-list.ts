@@ -181,9 +181,5 @@ export class MemberList implements OnInit, OnDestroy {
     return pages;
   }
 
-  // Cache is now handled by @ngneat/cashew in the service layer
-  clearCache(): void {
-    // Cache clearing is now handled automatically by the library
-    console.log('Cache is managed by @ngneat/cashew library');
-  }
+  // clearCache(): void {}
 }

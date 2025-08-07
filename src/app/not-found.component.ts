@@ -58,7 +58,7 @@ import { AccountService } from '../_services/account.service';
 export class NotFoundComponent {
   isAdmin = false;
   constructor(private router: Router, private accountService: AccountService) {
-    const user = this.accountService.getLoggedUserFromStorage();
+    const user = this.accountService.getLoggedUserFromStorageSync();
     this.isAdmin = !!user && user.role === 'Admin';
   }
   goBack() {
