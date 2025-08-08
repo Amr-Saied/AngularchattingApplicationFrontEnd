@@ -11,6 +11,7 @@ import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import { LoginFormsComponent } from './login-forms.component';
 import { LanguageSwitcher } from './LanguageSwitcher/language-switcher';
 import { TranslationService } from '../_services/translation.service';
+import { StateService } from '../_services/state.service';
 
 @Component({
   selector: 'app-nav',
@@ -38,10 +39,17 @@ export class Nav implements OnInit, AfterViewInit {
     private toastr: ToastrService,
     private defaultPhotoService: DefaultPhotoService,
     private memberService: MemberService,
-    public translationService: TranslationService // Make it public so template can access it
+    public translationService: TranslationService, // Make it public so template can access it
+    private stateService: StateService
   ) {}
 
   ngOnInit() {
+    // Subscribe to state changes
+    this.stateService.currentUser$.subscribe((user) => {
+      console.log('📱 Nav: Received currentUser update', user);
+      this.currentUser = user;
+    });
+
     this.accountService.getLoginState().subscribe((isLoggedIn) => {
       this.loggedIn = isLoggedIn;
       if (isLoggedIn) {
@@ -61,10 +69,12 @@ export class Nav implements OnInit, AfterViewInit {
 
   loadCurrentUser() {
     const loggedUser = this.accountService.getLoggedUserFromStorageSync();
-    if (loggedUser && loggedUser.username) {
-      this.memberService.getMemberByUsername(loggedUser.username).subscribe({
+    if (loggedUser && loggedUser.id) {
+      this.memberService.getMemberById(loggedUser.id).subscribe({
         next: (member) => {
           this.currentUser = member;
+          // Update the state service to ensure consistency
+          this.stateService.updateCurrentUser(member);
         },
         error: (error) => {
           console.error('Error loading current user:', error);
@@ -117,14 +127,43 @@ export class Nav implements OnInit, AfterViewInit {
   }
 
   logout() {
-    this.accountService.clearLoggedUserFromStorage();
-    this.loggedIn = false;
-    this.currentUser = null;
-    this.router.navigate(['/home']);
-    this.toastr.success('Logged out successfully!', 'Logout Successful', {
-      timeOut: 5000,
-      closeButton: true,
-      progressBar: true,
+    // Call backend logout endpoint and handle cleanup
+    this.accountService.logout().subscribe({
+      next: (response) => {
+        console.log('Logout response:', response);
+
+        // Clear local state
+        this.loggedIn = false;
+        this.currentUser = null;
+
+        // Clear any cached data
+        this.stateService.clearState();
+
+        // Navigate to home page
+        this.router.navigate(['/home']);
+
+        // Show success message
+        this.toastr.success('Logged out successfully!', 'Logout Successful', {
+          timeOut: 5000,
+          closeButton: true,
+          progressBar: true,
+        });
+      },
+      error: (error) => {
+        console.error('Logout error:', error);
+
+        // Even if backend fails, clear local state
+        this.loggedIn = false;
+        this.currentUser = null;
+        this.stateService.clearState();
+        this.router.navigate(['/home']);
+
+        this.toastr.success('Logged out successfully!', 'Logout Successful', {
+          timeOut: 5000,
+          closeButton: true,
+          progressBar: true,
+        });
+      },
     });
   }
 

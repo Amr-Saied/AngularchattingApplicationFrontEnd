@@ -122,7 +122,7 @@ export class NavigationService {
   /**
    * Gets navigation history for debugging
    */
-  getNavigationHistory(): string[] {
-    return [...this.navigationHistory];
-  }
+  // getNavigationHistory(): string[] {
+  //   return [...this.navigationHistory];
+  // }
 }

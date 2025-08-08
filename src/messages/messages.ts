@@ -22,6 +22,7 @@ import { TokenService } from '../_services/token.service';
 import { EMOJI_LIST } from '../_data/emoji-data';
 import { MessagesResolverData } from '../_services/messages.resolver';
 import { NavigationService } from '../_services/navigation.service';
+import { StateService } from '../_services/state.service';
 import { NavigationEnd } from '@angular/router';
 import RecordRTC from 'recordrtc';
 
@@ -87,7 +88,8 @@ export class Messages implements OnInit {
     private defaultPhotoService: DefaultPhotoService,
     private tokenService: TokenService,
     private cdr: ChangeDetectorRef,
-    private navigationService: NavigationService
+    private navigationService: NavigationService,
+    private stateService: StateService
   ) {
     // Add a guard to prevent premature destruction
     this.router.events.subscribe((event) => {
@@ -110,6 +112,22 @@ export class Messages implements OnInit {
     // Set initialization flag
     this.isComponentInitialized = true;
 
+    // Subscribe to state changes
+    this.stateService.conversations$.subscribe((conversations) => {
+      this.conversations = conversations;
+      this.cdr.detectChanges();
+    });
+
+    this.stateService.likedUsers$.subscribe((likedUsers) => {
+      this.likedUsers = likedUsers;
+      this.cdr.detectChanges();
+    });
+
+    this.stateService.messages$.subscribe((messages) => {
+      this.messages = messages;
+      this.cdr.detectChanges();
+    });
+
     // Get resolved data from the resolver
     const resolvedData = this.route.snapshot.data[
       'data'
@@ -118,6 +136,9 @@ export class Messages implements OnInit {
     if (resolvedData) {
       this.conversations = resolvedData.conversations || [];
       this.likedUsers = resolvedData.likedUsers || [];
+      // Update state with resolved data
+      this.stateService.updateConversations(this.conversations);
+      this.stateService.updateLikedUsers(this.likedUsers);
     } else {
       this.loadConversations();
       this.loadLikedUsers();
@@ -347,6 +368,15 @@ export class Messages implements OnInit {
     this.selectedConversation = conversation;
     this.showChat = true;
     this.showLikedUsers = false;
+    // Immediately zero unread count locally for better UX
+    this.selectedConversation.unreadCount = 0;
+    // Also update in global state list
+    const updatedConversations = this.conversations.map((c) =>
+      c.otherUserId === conversation.otherUserId
+        ? { ...c, unreadCount: 0 }
+        : c
+    );
+    this.stateService.updateConversations(updatedConversations);
     this.loadMessages(conversation.otherUserId);
   }
 

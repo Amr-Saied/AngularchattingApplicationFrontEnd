@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 import { LikeCounts } from '../_models/LikeCounts';
 import { Member } from '../_models/member';
 import { PagedResult } from '../_models/pagination';
+import { StateService } from './state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,7 +17,7 @@ export class LikesService {
   // Cache for like states to avoid unnecessary API calls
   private likeCache = new Map<number, boolean>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private stateService: StateService) {}
 
   // Add a like
   addLike(likedUserId: number): Observable<boolean> {
@@ -28,6 +29,8 @@ export class LikesService {
         map((response) => {
           if (response.success) {
             this.likeCache.set(likedUserId, true);
+            // Refresh liked users list to update UI
+            this.getMyLikes().subscribe();
           }
           return response.success;
         }),
@@ -70,6 +73,8 @@ export class LikesService {
         map((response) => {
           if (response.success) {
             this.likeCache.set(likedUserId, false);
+            // Refresh liked users list to update UI
+            this.getMyLikes().subscribe();
           }
           return response.success;
         }),
@@ -110,9 +115,12 @@ export class LikesService {
 
   // Get users that the current user has liked
   getMyLikes(): Observable<Member[]> {
-    return this.http
-      .get<Member[]>(`${this.baseUrl}/my-likes`)
-      .pipe(catchError(() => of([])));
+    return this.http.get<Member[]>(`${this.baseUrl}/my-likes`).pipe(
+      tap((likedUsers) => {
+        this.stateService.updateLikedUsers(likedUsers);
+      }),
+      catchError(() => of([]))
+    );
   }
 
   // Get paginated users that the current user has liked

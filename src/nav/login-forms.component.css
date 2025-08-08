@@ -277,6 +277,30 @@
   padding: 0.5rem;
 }
 
+/* Fix Google button text visibility in dark mode */
+.dark-theme #google-signin-button {
+  filter: brightness(1.2) contrast(1.1);
+}
+
+/* Ensure Google button text is visible in dark mode */
+.dark-theme #google-signin-button * {
+  color: #333 !important;
+}
+
+/* Specific override for Google button text in dark mode */
+.dark-theme #google-signin-button .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb {
+  color: #333 !important;
+}
+
+.dark-theme #google-signin-button .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb span {
+  color: #333 !important;
+}
+
+/* Force Google button to use light theme in dark mode */
+.dark-theme #google-signin-button iframe {
+  filter: brightness(1.2) contrast(1.1);
+}
+
 /* Loading state styles */
 .btn:disabled {
   cursor: not-allowed;

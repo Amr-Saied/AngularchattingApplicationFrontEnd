@@ -1,20 +1,15 @@
 <div class="messages-container">
   <!-- Conversations List -->
-  <div
-    *ngIf="!showChat && !showLikedUsers && conversations.length > 0"
-    class="conversations-list"
-  >
+  @if (!showChat && !showLikedUsers && conversations.length > 0) {
+  <div class="conversations-list">
     <div class="conversations-header">
       <h2>💬 Your Conversations</h2>
       <div class="conversations-count">{{ conversations.length }} chats</div>
     </div>
 
     <div class="conversations-grid">
-      <div
-        class="conversation-card"
-        *ngFor="let conversation of conversations"
-        (click)="selectConversation(conversation)"
-      >
+      @for (conversation of conversations; track conversation.otherUserId) {
+      <div class="conversation-card" (click)="selectConversation(conversation)">
         <div class="conversation-avatar">
           <img
             [src]="getProfileImageUrl(conversation.otherUserPhotoUrl)"
@@ -42,18 +37,23 @@
               {{ conversation.lastMessage }}
             </p>
             <div class="conversation-badges">
-              <div class="unread-badge" *ngIf="conversation.unreadCount > 0">
+              @if (conversation.unreadCount > 0) {
+              <div class="unread-badge">
                 {{ conversation.unreadCount }}
               </div>
+              }
             </div>
           </div>
         </div>
       </div>
+      }
     </div>
   </div>
+  }
 
   <!-- No Conversations - Show Liked Users -->
-  <div *ngIf="!showChat && showLikedUsers" class="liked-users">
+  @if (!showChat && showLikedUsers) {
+  <div class="liked-users">
     <h2>Start a Conversation</h2>
     <p class="no-conversations">
       You don't have any conversations yet. Start chatting with people you
@@ -61,11 +61,8 @@
     </p>
 
     <div class="liked-users-grid">
-      <div
-        class="user-card"
-        *ngFor="let user of likedUsers"
-        (click)="startChatWithUser(user)"
-      >
+      @for (user of likedUsers; track user.id) {
+      <div class="user-card" (click)="startChatWithUser(user)">
         <img
           [src]="getProfileImageUrl(user.photoUrl)"
           [alt]="user.userName"
@@ -77,9 +74,11 @@
         </div>
         <button class="chat-button">Start Chat</button>
       </div>
+      }
     </div>
 
-    <div *ngIf="likedUsers.length === 0" class="no-liked-users">
+    @if (likedUsers.length === 0) {
+    <div class="no-liked-users">
       <p>
         You haven't liked anyone yet. Go to the Members page to discover people!
       </p>
@@ -87,10 +86,13 @@
         Browse Members
       </button>
     </div>
+    }
   </div>
+  }
 
   <!-- Chat Window -->
-  <div *ngIf="showChat && selectedConversation" class="chat-window">
+  @if (showChat && selectedConversation) {
+  <div class="chat-window">
     <div class="chat-header">
       <button class="back-button" (click)="backToConversations()">
         ← Back
@@ -99,65 +101,77 @@
     </div>
 
     <div class="messages-list">
+      @for (message of messages; track message.id) {
       <div
-        *ngFor="let message of messages"
         class="message-item"
         [ngClass]="{
           'my-message': isMyMessage(message),
           'other-message': !isMyMessage(message)
         }"
       >
-        <div class="message-avatar" *ngIf="!isMyMessage(message)">
+        @if (isMyMessage(message)) {
+        <div class="message-avatar">
           <img
             [src]="getProfileImageUrl(message.senderPhotoUrl)"
             [alt]="message.senderUsername"
             class="message-avatar-image"
           />
         </div>
+        }
 
         <div class="message-content">
           <!-- Voice Message -->
-          <div *ngIf="isVoiceMessage(message)" class="voice-message">
+          @if (isVoiceMessage(message)) {
+          <div class="voice-message">
             <div class="voice-message-bubble">
               <button
                 class="play-voice-btn"
                 (click)="toggleVoicePlayback(message)"
                 [class.playing]="isVoicePlaying(message)"
               >
-                <span *ngIf="!isVoicePlaying(message)">▶️</span>
-                <span *ngIf="isVoicePlaying(message)">⏸️</span>
+                @if (!isVoicePlaying(message)) {
+                <span>▶️</span>
+                } @if (isVoicePlaying(message)) {
+                <span>⏸️</span>
+                }
               </button>
               <div class="voice-waveform">
                 <div class="waveform-bars">
-                  <div
-                    class="waveform-bar"
-                    *ngFor="
-                      let bar of getWaveformBars(message.voiceDuration || 0)
-                    "
-                  ></div>
+                  @for (bar of getWaveformBars(message.voiceDuration || 0);
+                  track bar) {
+                  <div class="waveform-bar"></div>
+                  }
                 </div>
               </div>
               <span class="voice-duration">{{
                 formatRecordingDuration(message.voiceDuration || 0)
               }}</span>
             </div>
-            <p class="voice-message-text" *ngIf="message.content">
+            @if (message.content) {
+            <p class="voice-message-text">
               {{ message.content }}
             </p>
+            }
           </div>
+          }
 
           <!-- Text Message -->
-          <p *ngIf="!isVoiceMessage(message)">
+          @if (!isVoiceMessage(message)) {
+          <p>
             {{ message.content }}
-            <span *ngIf="message.emoji" class="emoji">{{ message.emoji }}</span>
+            @if (message.emoji) {
+            <span class="emoji">{{ message.emoji }}</span>
+            }
           </p>
+          }
           <div class="message-footer">
             <span class="message-time">{{
               formatTime(message.messageSent)
             }}</span>
 
             <!-- Read Status Indicators for My Messages -->
-            <div *ngIf="isMyMessage(message)" class="message-status">
+            @if (isMyMessage(message)) {
+            <div class="message-status">
               <span
                 class="read-status"
                 [ngClass]="{
@@ -166,8 +180,11 @@
                 }"
                 [title]="getReadStatusTitle(message)"
               >
-                <span *ngIf="!message.dateRead">✓</span>
-                <span *ngIf="message.dateRead">✓✓</span>
+                @if (!message.dateRead) {
+                <span>✓</span>
+                } @if (message.dateRead) {
+                <span>✓✓</span>
+                }
               </span>
 
               <button
@@ -178,20 +195,25 @@
                 🗑️
               </button>
             </div>
+            }
           </div>
         </div>
 
-        <div class="message-avatar" *ngIf="isMyMessage(message)">
+        @if (!isMyMessage(message)) {
+        <div class="message-avatar">
           <img
             [src]="getProfileImageUrl(message.senderPhotoUrl)"
             [alt]="message.senderUsername"
             class="message-avatar-image"
           />
         </div>
+        }
       </div>
+      }
 
       <!-- Typing indicator -->
-      <div *ngIf="isTyping" class="typing-indicator">
+      @if (isTyping) {
+      <div class="typing-indicator">
         <div class="typing-dots">
           <span></span>
           <span></span>
@@ -201,10 +223,12 @@
           >{{ selectedConversation.otherUsername }} is typing...</span
         >
       </div>
+      }
     </div>
 
     <!-- Voice Recording UI -->
-    <div *ngIf="isRecording" class="voice-recording-container">
+    @if (isRecording) {
+    <div class="voice-recording-container">
       <div class="voice-recording-indicator">
         <div class="recording-dot"></div>
         <span class="recording-text">Recording...</span>
@@ -221,8 +245,8 @@
         </button>
       </div>
     </div>
-
-    <div class="message-input" *ngIf="!isRecording">
+    } @if (!isRecording) {
+    <div class="message-input">
       <input
         type="text"
         [(ngModel)]="newMessageContent"
@@ -250,32 +274,33 @@
         <button (click)="sendMessage()" class="send-button">Send</button>
       </div>
     </div>
+    }
 
     <!-- Emoji Picker -->
+    @if (showEmojiPicker) {
     <div
-      *ngIf="showEmojiPicker"
       class="emoji-picker-container"
       [ngClass]="{ show: showEmojiPicker }"
       (click)="onEmojiPickerClick($event)"
     >
       <div class="emoji-picker">
         <div class="emoji-grid">
-          <button
-            *ngFor="let emoji of emojis"
-            type="button"
-            class="emoji-btn"
-            (click)="addEmoji(emoji)"
-          >
+          @for (emoji of emojis; track emoji) {
+          <button type="button" class="emoji-btn" (click)="addEmoji(emoji)">
             {{ emoji }}
           </button>
+          }
         </div>
       </div>
     </div>
+    }
   </div>
+  }
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal-overlay" *ngIf="showDeleteModal" (click)="cancelDelete()">
+@if (showDeleteModal) {
+<div class="modal-overlay" (click)="cancelDelete()">
   <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Delete Message</h3>
@@ -301,3 +326,4 @@
     </div>
   </div>
 </div>
+}

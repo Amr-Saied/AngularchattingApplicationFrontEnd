@@ -6,7 +6,8 @@ export const tokenInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const token = tokenService.getToken();
 
-  if (token) {
+  // Only add token if it exists and is valid
+  if (token && tokenService.isTokenValid() && !tokenService.isTokenExpired()) {
     req = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,

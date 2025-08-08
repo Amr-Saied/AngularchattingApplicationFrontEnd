@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import { StateService } from '../../_services/state.service';
 
 @Component({
   selector: 'app-member-list',
@@ -40,10 +41,16 @@ export class MemberList implements OnInit, OnDestroy {
   constructor(
     private memberService: MemberService,
     private toastr: ToastrService,
-    private router: Router
+    private router: Router,
+    private stateService: StateService
   ) {}
 
   ngOnInit() {
+    // Subscribe to state changes
+    this.stateService.members$.subscribe((members) => {
+      this.members = members;
+    });
+
     // Clear search and load all members when component initializes
     this.clearSearchAndLoadAll();
     this.setupSearch();

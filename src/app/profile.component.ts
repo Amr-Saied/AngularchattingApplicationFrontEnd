@@ -1,4 +1,10 @@
-import { Component, OnInit, ViewChild, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  HostListener,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthGuard } from '../_guards/auth.guard';
@@ -18,6 +24,8 @@ import { NgxSpinnerModule } from 'ngx-spinner';
 import { DragDropDirective } from '../_directives/drag-drop.directive';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 import { DefaultPhotoService } from '../_services/default-photo.service';
+import { StateService } from '../_services/state.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -56,27 +64,23 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                 {{ user.knownAs || user.userName }}
               </h2>
               <div class="profile-meta mb-3">
-                <span
-                  *ngIf="user.city"
-                  class="d-block d-md-inline-block me-md-3"
-                >
+                @if (user.city) {
+                <span class="d-block d-md-inline-block me-md-3">
                   <i class="fas fa-map-marker-alt me-1"></i>{{ user.city }}
                 </span>
-                <span
-                  *ngIf="user.country"
-                  class="d-block d-md-inline-block me-md-3"
-                >
+                } @if (user.country) {
+                <span class="d-block d-md-inline-block me-md-3">
                   <i class="fas fa-flag me-1"></i>{{ user.country }}
                 </span>
-                <span
-                  *ngIf="user.age"
-                  class="d-block d-md-inline-block me-md-3"
-                >
+                } @if (user.age) {
+                <span class="d-block d-md-inline-block me-md-3">
                   <i class="fas fa-birthday-cake me-1"></i>{{ user.age }} yrs
                 </span>
-                <span *ngIf="user.gender" class="d-block d-md-inline-block">
+                } @if (user.gender) {
+                <span class="d-block d-md-inline-block">
                   <i class="fas fa-venus-mars me-1"></i>{{ user.gender }}
                 </span>
+                }
               </div>
               <div
                 class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2 mb-3"
@@ -246,10 +250,8 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                 </div>
 
                 <!-- Gallery with photos -->
-                <div
-                  class="gallery-wrapper"
-                  *ngIf="user.photos && user.photos.length > 0"
-                >
+                @if (user.photos && user.photos.length > 0) {
+                <div class="gallery-wrapper">
                   <gallery
                     #galleryComp
                     [items]="galleryImages"
@@ -258,12 +260,11 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                     [autoplay]="true"
                   ></gallery>
                 </div>
+                }
 
                 <!-- Empty gallery state -->
-                <div
-                  class="empty-gallery"
-                  *ngIf="!user.photos || user.photos.length === 0"
-                >
+                @if (!user.photos || user.photos.length === 0) {
+                <div class="empty-gallery">
                   <div class="empty-gallery-content">
                     <i class="fas fa-images empty-gallery-icon"></i>
                     <h4 class="empty-gallery-title">No Photos Yet</h4>
@@ -273,19 +274,16 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                     </p>
                   </div>
                 </div>
+                }
 
                 <!-- Gallery View Mode (with View buttons) -->
-                <div
-                  class="gallery-wrapper view-mode"
-                  *ngIf="
-                    !editGalleryMode && user.photos && user.photos.length > 0
-                  "
-                >
+                @if (!editGalleryMode && user.photos && user.photos.length > 0)
+                {
+                <div class="gallery-wrapper view-mode">
                   <div class="row g-2">
-                    <div
-                      class="col-3 col-md-2"
-                      *ngFor="let photo of user.photos; let i = index"
-                    >
+                    @for (photo of user.photos; track photo.id; let i = $index)
+                    {
+                    <div class="col-3 col-md-2">
                       <div class="position-relative photo-item">
                         <img
                           [src]="photo.url"
@@ -302,21 +300,18 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                         </button>
                       </div>
                     </div>
+                    }
                   </div>
                 </div>
+                }
 
                 <!-- Gallery Edit Mode (with Delete buttons) -->
-                <div
-                  class="gallery-wrapper edit-mode"
-                  *ngIf="
-                    editGalleryMode && user.photos && user.photos.length > 0
-                  "
-                >
+                @if (editGalleryMode && user.photos && user.photos.length > 0) {
+                <div class="gallery-wrapper edit-mode">
                   <div class="row g-2">
-                    <div
-                      class="col-3 col-md-2"
-                      *ngFor="let photo of user.photos; let i = index"
-                    >
+                    @for (photo of user.photos; track photo.id; let i = $index)
+                    {
+                    <div class="col-3 col-md-2">
                       <div class="position-relative">
                         <img
                           [src]="photo.url"
@@ -338,8 +333,10 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
                         </button>
                       </div>
                     </div>
+                    }
                   </div>
                 </div>
+                }
               </div>
             </div>
           </div>
@@ -358,7 +355,7 @@ import { DefaultPhotoService } from '../_services/default-photo.service';
   `,
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   user: Member = {
     id: 1,
     dateOfBirth: new Date(),
@@ -396,19 +393,32 @@ export class ProfileComponent implements OnInit {
   photoViewerIndex: number = 0;
   @ViewChild(GalleryComponent) galleryComp?: GalleryComponent;
 
+  private stateSubscription = new Subscription();
+
   constructor(
     private router: Router,
     private memberService: MemberService,
     private accountService: AccountService,
     private http: HttpClient,
     private toastr: ToastrService,
-    private defaultPhotoService: DefaultPhotoService
+    private defaultPhotoService: DefaultPhotoService,
+    private stateService: StateService
   ) {}
 
   ngOnInit() {
+    // Subscribe to state changes for reactive updates
+    this.stateSubscription.add(
+      this.stateService.currentUser$.subscribe((user) => {
+        if (user && this.user && user.id === this.user.id) {
+          this.user = { ...user };
+          this.initGallery();
+        }
+      })
+    );
+
     const loggedUser = this.accountService.getLoggedUserFromStorageSync();
-    if (loggedUser && loggedUser.username) {
-      this.memberService.getMemberByUsername(loggedUser.username).subscribe({
+    if (loggedUser && loggedUser.id) {
+      this.memberService.getMemberById(loggedUser.id).subscribe({
         next: (member) => {
           this.user = member;
           this.initGallery();
@@ -421,6 +431,10 @@ export class ProfileComponent implements OnInit {
     } else {
       this.initGallery();
     }
+  }
+
+  ngOnDestroy() {
+    this.stateSubscription.unsubscribe();
   }
 
   setTab(tab: string) {

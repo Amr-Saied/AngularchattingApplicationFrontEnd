@@ -73,6 +73,14 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.route.queryParams.subscribe((params) => {
       this.checkForResetToken();
     });
+
+    // Subscribe to theme changes to re-render Google button
+    this.themeService.getTheme().subscribe((isDark) => {
+      // Re-render Google button when theme changes
+      setTimeout(() => {
+        this.renderGoogleButton();
+      }, 100); // Small delay to ensure theme class is applied
+    });
   }
 
   ngAfterViewInit() {
@@ -320,8 +328,14 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
         token: response.token,
         refreshToken: response.refreshToken || '',
         role: response.role || 'User',
+        tokenExpires: response.tokenExpires
+          ? new Date(response.tokenExpires)
+          : undefined,
+        refreshTokenExpires: response.refreshTokenExpires
+          ? new Date(response.refreshTokenExpires)
+          : undefined,
       };
-      this.accountService.saveLoggedUserToStorage(loggedUser);
+      this.accountService.saveLoggedUserToStorageSync(loggedUser);
     }
 
     // Show success message
@@ -457,10 +471,13 @@ export class LoginFormsComponent implements OnInit, OnDestroy, AfterViewInit {
       googleButton.innerHTML = '';
 
       try {
+        // Check if dark theme is active
+        const isDarkTheme = document.body.classList.contains('dark-theme');
+
         (window as any).google.accounts.id.renderButton(googleButton, {
           type: 'standard',
           size: 'large',
-          theme: 'outline',
+          theme: isDarkTheme ? 'filled_blue' : 'outline', // Use filled_blue for dark mode
           text: 'sign_in_with',
           shape: 'rectangular',
           logo_alignment: 'left',

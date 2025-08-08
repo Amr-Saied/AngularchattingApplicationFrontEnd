@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 import { ConversationDto } from '../_models/conversation';
 import { MessageDto } from '../_models/message';
 import { CreateMessageDto } from '../_models/create-message';
+import { StateService } from './state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +14,7 @@ import { CreateMessageDto } from '../_models/create-message';
 export class MessageService {
   private baseUrl = environment.apiUrl + 'Message';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private stateService: StateService) {}
 
   // Get all conversations for current user
   getConversations(): Observable<ConversationDto[]> {
@@ -26,6 +27,9 @@ export class MessageService {
             lastMessageTime: new Date(conv.lastMessageTime),
           }))
         ),
+        tap((conversations) => {
+          this.stateService.updateConversations(conversations);
+        }),
         catchError(() => of([]))
       );
   }
@@ -40,6 +44,9 @@ export class MessageService {
           dateRead: msg.dateRead ? new Date(msg.dateRead) : undefined,
         }))
       ),
+      tap((messages) => {
+        this.stateService.updateMessages(messages);
+      }),
       catchError(() => of([]))
     );
   }
@@ -56,7 +63,11 @@ export class MessageService {
     if (emoji && emoji.trim() !== '') {
       messageDto.emoji = emoji;
     }
-    return this.http.post<MessageDto>(`${this.baseUrl}`, messageDto);
+    return this.http.post<MessageDto>(`${this.baseUrl}`, messageDto).pipe(
+      tap((message) => {
+        this.stateService.addMessage(message);
+      })
+    );
   }
 
   // Send voice message
@@ -70,7 +81,11 @@ export class MessageService {
     formData.append('voiceFile', voiceFile);
     formData.append('duration', duration.toString());
 
-    return this.http.post<MessageDto>(`${this.baseUrl}/voice`, formData);
+    return this.http.post<MessageDto>(`${this.baseUrl}/voice`, formData).pipe(
+      tap((message) => {
+        this.stateService.addMessage(message);
+      })
+    );
   }
   // Mark message as read
   markAsRead(messageId: number): Observable<boolean> {
@@ -88,6 +103,11 @@ export class MessageService {
       .delete<{ success: boolean }>(`${this.baseUrl}/${messageId}`)
       .pipe(
         map((response) => response.success),
+        tap((success) => {
+          if (success) {
+            this.stateService.removeMessage(messageId);
+          }
+        }),
         catchError(() => of(false))
       );
   }

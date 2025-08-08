@@ -80,14 +80,17 @@ export class AccountService implements OnDestroy {
 
   // Save logged user data to secure storage
   async saveLoggedUserToStorage(loggedUser: LoggedUser) {
-    // Ensure we have the required fields
+    // Derive id/expiry from token if missing
+    const derivedId = this.extractUserIdFromToken(loggedUser.token);
+    const derivedExpiry = this.extractExpiryFromToken(loggedUser.token);
+
     const userToStore: LoggedUser = {
-      id: loggedUser.id,
+      id: loggedUser.id && loggedUser.id > 0 ? loggedUser.id : derivedId || 0,
       username: loggedUser.username,
       token: loggedUser.token,
       refreshToken: loggedUser.refreshToken,
       role: loggedUser.role,
-      tokenExpires: loggedUser.tokenExpires,
+      tokenExpires: loggedUser.tokenExpires || derivedExpiry,
       refreshTokenExpires: loggedUser.refreshTokenExpires,
     };
 
@@ -99,6 +102,72 @@ export class AccountService implements OnDestroy {
 
     // Setup SignalR ban listeners for real-time notifications
     this.setupBanListeners();
+  }
+
+  // Synchronous version for immediate availability
+  saveLoggedUserToStorageSync(loggedUser: LoggedUser) {
+    // Derive id/expiry from token if missing
+    const derivedId = this.extractUserIdFromToken(loggedUser.token);
+    const derivedExpiry = this.extractExpiryFromToken(loggedUser.token);
+
+    const userToStore: LoggedUser = {
+      id: loggedUser.id && loggedUser.id > 0 ? loggedUser.id : derivedId || 0,
+      username: loggedUser.username,
+      token: loggedUser.token,
+      refreshToken: loggedUser.refreshToken,
+      role: loggedUser.role,
+      tokenExpires: loggedUser.tokenExpires || derivedExpiry,
+      refreshTokenExpires: loggedUser.refreshTokenExpires,
+    };
+
+    this.encryptionService.setSecureItemSync(this.LOGGED_USER_KEY, userToStore);
+    this.loginStateSubject.next(true);
+
+    // Setup SignalR ban listeners for real-time notifications
+    this.setupBanListeners();
+  }
+
+  // Decode helpers
+  private extractUserIdFromToken(token: string): number | null {
+    try {
+      const payload = this.decodeJwtPayload(token);
+      // .NET adds JwtRegisteredClaimNames.NameId as 'nameid'
+      const raw = payload?.nameid ?? payload?.sub ?? null;
+      const parsed = typeof raw === 'string' ? parseInt(raw, 10) : raw;
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private extractExpiryFromToken(token: string): Date | undefined {
+    try {
+      const payload = this.decodeJwtPayload(token);
+      const exp = payload?.exp; // seconds since epoch
+      if (typeof exp === 'number' && exp > 0) {
+        return new Date(exp * 1000);
+      }
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private decodeJwtPayload(token: string): any {
+    const parts = token?.split('.') || [];
+    if (parts.length !== 3) throw new Error('Invalid JWT');
+    const payloadB64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = payloadB64.padEnd(
+      payloadB64.length + ((4 - (payloadB64.length % 4)) % 4),
+      '='
+    );
+    const json = decodeURIComponent(
+      atob(padded)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(json);
   }
 
   // Get logged user from secure storage
@@ -130,6 +199,15 @@ export class AccountService implements OnDestroy {
         this.clearLoggedUserFromStorage();
         return false;
       }
+
+      // Check if token is expired
+      if (loggedUser.tokenExpires) {
+        const expiryDate = new Date(loggedUser.tokenExpires);
+        if (expiryDate < new Date()) {
+          this.clearLoggedUserFromStorage();
+          return false;
+        }
+      }
     }
 
     return isLoggedIn;
@@ -142,6 +220,22 @@ export class AccountService implements OnDestroy {
     // No need to stop SignalR listeners as they're connection-based
   }
 
+  // Logout method that calls backend and clears local storage
+  logout(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/Logout`, {}).pipe(
+      catchError((error) => {
+        console.error('Error during logout:', error);
+        // Even if backend logout fails, clear local storage
+        this.clearLoggedUserFromStorage();
+        return of({ message: 'Logged out locally' });
+      }),
+      finalize(() => {
+        // Always clear local storage and update state
+        this.clearLoggedUserFromStorage();
+      })
+    );
+  }
+
   // Get login state as observable
   getLoginState(): Observable<boolean> {
     return this.loginStateSubject.asObservable();
@@ -152,6 +246,17 @@ export class AccountService implements OnDestroy {
     // Get from stored user data
     const loggedUser = this.getLoggedUserFromStorageSync();
     return loggedUser?.id || null;
+  }
+
+  // Refresh session after profile updates
+  refreshSession(): boolean {
+    const loggedUser = this.getLoggedUserFromStorageSync();
+    if (loggedUser) {
+      // Re-save the user data to ensure it's properly stored
+      this.saveLoggedUserToStorageSync(loggedUser);
+      return this.isLoggedIn();
+    }
+    return false;
   }
 
   // Check if current user is viewing their own profile

@@ -17,6 +17,7 @@ import { TextInput } from '../_forms/text-input/text-input';
 import { DefaultPhotoService } from '../_services/default-photo.service';
 import { DragDropDirective } from '../_directives/drag-drop.directive';
 import { ResponsiveService } from '../_services/responsive.service';
+import { StateService } from '../_services/state.service';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -323,7 +324,8 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     private toastr: ToastrService,
     private fb: FormBuilder,
     private defaultPhotoService: DefaultPhotoService,
-    private responsiveService: ResponsiveService
+    private responsiveService: ResponsiveService,
+    private stateService: StateService
   ) {
     this.editForm = this.fb.group({
       knownAs: ['', [Validators.required]],
@@ -355,15 +357,24 @@ export class EditProfileComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Subscribe to state changes for reactive updates
+    this.responsiveSubscription.add(
+      this.stateService.currentUser$.subscribe((user) => {
+        if (user && this.member && user.id === this.member.id) {
+          this.member = { ...user };
+          this.originalMember = { ...user };
+          this.updateFormValues();
+        }
+      })
+    );
+
     const loggedUser = this.accountService.getLoggedUserFromStorageSync();
 
-    if (loggedUser && loggedUser.username) {
-      this.memberService.getMemberByUsername(loggedUser.username).subscribe({
+    if (loggedUser && loggedUser.id) {
+      this.memberService.getMemberById(loggedUser.id).subscribe({
         next: (member) => {
           if (!member) {
-            this.toastr.error(
-              `User '${loggedUser.username}' not found. Please check your login.`
-            );
+            this.toastr.error('User not found. Please check your login.');
             return;
           }
           this.member = { ...member };
@@ -449,12 +460,19 @@ export class EditProfileComponent implements OnInit, OnDestroy {
           next: (response) => {
             this.toastr.success('Username updated successfully!');
 
-            // Update the stored user data with new username
+            // Update the stored user data with new username and ensure session persistence
             const loggedUser =
               this.accountService.getLoggedUserFromStorageSync();
             if (loggedUser) {
               loggedUser.username = response.newUsername;
-              this.accountService.saveLoggedUserToStorage(loggedUser);
+              // Use synchronous method to ensure immediate availability
+              this.accountService.saveLoggedUserToStorageSync(loggedUser);
+
+              // Refresh session to ensure persistence
+              if (!this.accountService.refreshSession()) {
+                this.toastr.error('Session expired. Please log in again.');
+                return;
+              }
             }
 
             // Reload member data with new username
@@ -485,6 +503,9 @@ export class EditProfileComponent implements OnInit, OnDestroy {
         this.originalMember = { ...member };
         this.originalUsername = member.userName || '';
         this.updateFormValues();
+
+        // Force refresh all user-related data across the application
+        this.stateService.forceRefreshUserData(member);
       },
       error: (error) => {
         console.error('Error reloading member data:', error);
@@ -521,12 +542,39 @@ export class EditProfileComponent implements OnInit, OnDestroy {
       };
 
       this.memberService.updateMember(this.member.id, updatedMember).subscribe({
-        next: () => {
+        next: (updatedMember) => {
+          // Immediately update local state
+          this.member = { ...updatedMember };
+          this.originalMember = { ...updatedMember };
+
+          // Clear success/error messages
           this.successMsg = 'Profile updated successfully!';
           this.errorMsg = '';
-          this.originalMember = { ...updatedMember };
+
+          // Force refresh all user-related data across the application
+          this.stateService.forceRefreshUserData(updatedMember);
+
+          // Update the logged user in storage to reflect changes
+          const loggedUser = this.accountService.getLoggedUserFromStorageSync();
+          if (loggedUser && updatedMember.userName) {
+            loggedUser.username = updatedMember.userName;
+            this.accountService.saveLoggedUserToStorageSync(loggedUser);
+          }
+
+          // Refresh session to ensure persistence after profile update
+          if (!this.accountService.refreshSession()) {
+            this.toastr.error('Session expired. Please log in again.');
+            return;
+          }
+
+          // Show success message
           this.toastr.success('Profile updated successfully!');
+
+          // Reset form state
           this.isUpdatingProfile = false;
+
+          // Update form values to reflect the new state
+          this.updateFormValues();
         },
         error: (error) => {
           console.error('Error updating profile:', error);
@@ -570,12 +618,36 @@ export class EditProfileComponent implements OnInit, OnDestroy {
     this.memberService.uploadPhoto(file).subscribe({
       next: (res: { url: string }) => {
         if (this.member) {
+          // Immediately update local state
           this.member.photoUrl = res.url;
+
           // Save the new photo URL to the backend
           this.memberService
             .updateMember(this.member.id, this.member)
-            .subscribe();
-          this.toastr.success('Profile photo updated successfully!');
+            .subscribe({
+              next: (updatedMember) => {
+                // Update local state immediately
+                this.member = { ...updatedMember };
+                this.originalMember = { ...updatedMember };
+
+                // Force refresh all user-related data across the application
+                this.stateService.forceRefreshUserData(updatedMember);
+
+                // Update the logged user in storage
+                const loggedUser =
+                  this.accountService.getLoggedUserFromStorageSync();
+                if (loggedUser && updatedMember.userName) {
+                  loggedUser.username = updatedMember.userName;
+                  this.accountService.saveLoggedUserToStorageSync(loggedUser);
+                }
+
+                this.toastr.success('Profile photo updated successfully!');
+              },
+              error: (error) => {
+                console.error('Error updating member with new photo:', error);
+                this.toastr.error('Error updating profile photo');
+              },
+            });
         }
       },
       error: () => {

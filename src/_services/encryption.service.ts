@@ -133,11 +133,15 @@ export class EncryptionService {
 
   // Synchronous version for backward compatibility
   setSecureItemSync(key: string, value: any): void {
-    this.setSecureItem(key, value).catch((error) => {
-      console.error('Async encryption failed, using sync fallback:', error);
+    try {
+      // Try to encrypt and store synchronously
       const fallbackValue = btoa(encodeURIComponent(JSON.stringify(value)));
       localStorage.setItem(key, fallbackValue);
-    });
+    } catch (error) {
+      console.error('Sync encryption failed:', error);
+      // If encryption fails, store as plain JSON
+      localStorage.setItem(key, JSON.stringify(value));
+    }
   }
 
   getSecureItemSync(key: string): any {
@@ -145,18 +149,17 @@ export class EncryptionService {
     if (!encryptedValue) return null;
 
     try {
-      // Try to parse as JSON first (for backward compatibility)
+      // Try to parse as JSON first (for backward compatibility with unencrypted data)
       return JSON.parse(encryptedValue);
     } catch {
-      // If that fails, try decryption
-      this.getSecureItem(key)
-        .then((result) => {
-          return result;
-        })
-        .catch(() => {
-          return null;
-        });
+      // If that fails, try fallback decryption (for encrypted data)
+      try {
+        const fallbackValue = decodeURIComponent(atob(encryptedValue));
+        return JSON.parse(fallbackValue);
+      } catch (fallbackError) {
+        console.error('Failed to decrypt item:', fallbackError);
+        return null;
+      }
     }
-    return null;
   }
 }
