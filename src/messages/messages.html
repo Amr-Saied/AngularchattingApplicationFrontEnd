@@ -90,6 +90,28 @@
   </div>
   }
 
+  <!-- No Conversations and No Liked Users -->
+  @if (!showChat && !showLikedUsers && conversations.length === 0) {
+  <div class="no-conversations-container">
+    <div class="no-conversations-content">
+      <div class="no-conversations-icon">💬</div>
+      <h2>No Conversations Yet</h2>
+      <p class="no-conversations-message">
+        You don't have any conversations yet. Start connecting with people to
+        begin chatting!
+      </p>
+      <div class="no-conversations-actions">
+        <button class="primary-button" (click)="navigateToMembers()">
+          Browse Members
+        </button>
+        <button class="secondary-button" (click)="loadLikedUsers()">
+          View Liked Users
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
   <!-- Chat Window -->
   @if (showChat && selectedConversation) {
   <div class="chat-window">

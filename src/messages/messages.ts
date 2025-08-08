@@ -372,9 +372,7 @@ export class Messages implements OnInit {
     this.selectedConversation.unreadCount = 0;
     // Also update in global state list
     const updatedConversations = this.conversations.map((c) =>
-      c.otherUserId === conversation.otherUserId
-        ? { ...c, unreadCount: 0 }
-        : c
+      c.otherUserId === conversation.otherUserId ? { ...c, unreadCount: 0 } : c
     );
     this.stateService.updateConversations(updatedConversations);
     this.loadMessages(conversation.otherUserId);
@@ -656,7 +654,17 @@ export class Messages implements OnInit {
   }
 
   isUserOnline(userId: number): boolean {
-    return this.onlineUsers.includes(userId);
+    // Check if user is currently connected via SignalR
+    const isConnected = this.onlineUsers.includes(userId);
+
+    // If user is connected via SignalR, they are online (green dot)
+    if (isConnected) {
+      return true;
+    }
+
+    // If user is not connected via SignalR, they are offline (gray dot)
+    // This includes users who are logged out, disconnected, or have no active sessions
+    return false;
   }
 
   getReadStatusTitle(message: MessageDto): string {

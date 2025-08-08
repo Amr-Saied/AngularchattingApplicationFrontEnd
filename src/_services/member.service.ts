@@ -77,11 +77,6 @@ export class MemberService {
 
           // Force refresh all user-related data
           this.stateService.forceRefreshUserData(updatedMember);
-
-          console.log(
-            '✅ MemberService: Updated member successfully',
-            updatedMember
-          );
         })
       );
   }
@@ -101,8 +96,6 @@ export class MemberService {
 
         // Clear members list cache to ensure updated data is shown
         cacheManager.delete('members-list');
-
-        console.log('🗑️ Cleared member caches for user:', userId, username);
       }
     } catch (error) {
       console.warn('Failed to clear member caches:', error);
@@ -177,12 +170,6 @@ export class MemberService {
               cacheManager.delete(`member-username-${currentUsername}`);
               cacheManager.delete(`member-username-${newUsername}`);
               cacheManager.delete('members-list');
-              console.log(
-                '🗑️ Cleared username caches:',
-                currentUsername,
-                '->',
-                newUsername
-              );
             }
           } catch (error) {
             console.warn('Failed to clear username caches:', error);

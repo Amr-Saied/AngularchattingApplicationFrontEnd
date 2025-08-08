@@ -12,6 +12,7 @@ import { LoginFormsComponent } from './login-forms.component';
 import { LanguageSwitcher } from './LanguageSwitcher/language-switcher';
 import { TranslationService } from '../_services/translation.service';
 import { StateService } from '../_services/state.service';
+import { SignalRService } from '../_services/signalr.service';
 
 @Component({
   selector: 'app-nav',
@@ -40,7 +41,8 @@ export class Nav implements OnInit, AfterViewInit {
     private defaultPhotoService: DefaultPhotoService,
     private memberService: MemberService,
     public translationService: TranslationService, // Make it public so template can access it
-    private stateService: StateService
+    private stateService: StateService,
+    private signalRService: SignalRService
   ) {}
 
   ngOnInit() {
@@ -127,13 +129,24 @@ export class Nav implements OnInit, AfterViewInit {
     this.showLoginModal = false;
   }
 
-  logout() {
-    // Call backend logout endpoint and handle cleanup
+  logout(event?: Event) {
+    // Prevent default behavior if event is provided
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // Stop SignalR connection first
+    this.signalRService.stopConnection();
+
+    // Clear state immediately
+    this.stateService.clearState();
+    this.loggedIn = false;
+    this.currentUser = null;
+
+    // Call backend logout endpoint
     this.accountService.logout().subscribe({
       next: (response) => {
-        // Clear any cached data
-        this.stateService.clearState();
-
         // Navigate to home page
         this.router.navigate(['/home']);
 
@@ -147,8 +160,7 @@ export class Nav implements OnInit, AfterViewInit {
       error: (error) => {
         console.error('Logout error:', error);
 
-        // Even if backend fails, clear local state
-        this.stateService.clearState();
+        // Even if backend fails, navigate to home
         this.router.navigate(['/home']);
 
         this.toastr.success('Logged out successfully!', 'Logout Successful', {

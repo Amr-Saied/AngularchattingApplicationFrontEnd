@@ -46,15 +46,12 @@ export class StateService {
 
   // Update methods
   updateCurrentUser(user: Member | null): void {
-    console.log('🔄 StateService: Updating currentUser', user);
     this.currentUser$.next(user);
     this.updateState({ currentUser: user, isProfileUpdated: true });
   }
 
   // Force refresh all user-related data
   forceRefreshUserData(user: Member): void {
-    console.log('🔄 StateService: Force refreshing user data', user);
-
     // Immediately update current user
     this.updateCurrentUser(user);
 
@@ -79,33 +76,24 @@ export class StateService {
       this.currentUser$.next(user);
       this.members$.next(updatedMembers);
     }, 0);
-
-    console.log('✅ StateService: Force refresh completed for user', user.id);
   }
 
   updateMembers(members: Member[]): void {
-    console.log('🔄 StateService: Updating members', members.length);
     this.members$.next(members);
     this.updateState({ members, isMembersListUpdated: true });
   }
 
   updateConversations(conversations: ConversationDto[]): void {
-    console.log(
-      '🔄 StateService: Updating conversations',
-      conversations.length
-    );
     this.conversations$.next(conversations);
     this.updateState({ conversations, isConversationsUpdated: true });
   }
 
   updateMessages(messages: MessageDto[]): void {
-    console.log('🔄 StateService: Updating messages', messages.length);
     this.messages$.next(messages);
     this.updateState({ messages, isMessagesUpdated: true });
   }
 
   updateLikedUsers(likedUsers: Member[]): void {
-    console.log('🔄 StateService: Updating likedUsers', likedUsers.length);
     this.likedUsers$.next(likedUsers);
     this.updateState({ likedUsers, isLikedUsersUpdated: true });
   }

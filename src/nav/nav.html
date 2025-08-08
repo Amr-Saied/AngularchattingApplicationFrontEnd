@@ -17,11 +17,9 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
         <li class="nav-item" *ngIf="loggedIn; else empty1">
-          <a
-            class="nav-link"
-            routerLink="/members"
-            >{{ translationService.translate("exploreMembers") }}</a
-          >
+          <a class="nav-link" routerLink="/members">{{
+            translationService.translate("exploreMembers")
+          }}</a>
         </li>
         <ng-template #empty1>
           <li class="nav-item invisible">
@@ -122,7 +120,11 @@
             </li>
             <li><hr class="dropdown-divider" /></li>
             <li>
-              <a class="dropdown-item text-danger" href="#" (click)="logout()">
+              <a
+                class="dropdown-item text-danger"
+                (click)="logout($event)"
+                style="cursor: pointer"
+              >
                 <i class="fas fa-sign-out-alt me-2"></i
                 >{{ translationService.translate("logout") }}
               </a>

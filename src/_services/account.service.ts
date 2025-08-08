@@ -222,18 +222,14 @@ export class AccountService implements OnDestroy {
 
   // Logout method that calls backend and clears local storage
   logout(): Observable<any> {
+    // Clear local storage immediately
+    this.clearLoggedUserFromStorage();
+
     return this.http.post(`${this.baseUrl}/Logout`, {}).pipe(
       catchError((error) => {
         console.error('Error during logout:', error);
-        // Even if backend logout fails, clear local storage
-        this.clearLoggedUserFromStorage();
+        // Even if backend logout fails, we already cleared local storage
         return of({ message: 'Logged out locally' });
-      }),
-      finalize(() => {
-        // Only clear local storage if it hasn't been cleared already
-        if (this.isLoggedIn()) {
-          this.clearLoggedUserFromStorage();
-        }
       })
     );
   }

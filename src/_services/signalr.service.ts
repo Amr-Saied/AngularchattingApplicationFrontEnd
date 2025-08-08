@@ -33,44 +33,47 @@ export class SignalRService {
     // If connection exists but not connected, stop it first
     if (this.hubConnection) {
       this.hubConnection.stop();
+      this.hubConnection = null;
     }
 
-    this.hubConnection = new HubConnectionBuilder()
-      .withUrl(`${environment.apiUrl}messagehub`, {
-        accessTokenFactory: () => token,
-      })
-      .withAutomaticReconnect([0, 2000, 10000, 30000])
-      .build();
+    // Add a small delay to ensure previous connection is fully stopped
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this.hubConnection = new HubConnectionBuilder()
+          .withUrl(`${environment.apiUrl}messagehub`, {
+            accessTokenFactory: () => token,
+          })
+          .withAutomaticReconnect([0, 2000, 10000, 30000])
+          .configureLogging(0) // Disable SignalR logging
+          .build();
 
-    // Add connection event handlers
-    this.hubConnection.onreconnecting(() => {
-      this.connectionEstablished.next(false);
+        // Add connection event handlers
+        this.hubConnection!.onreconnecting(() => {
+          this.connectionEstablished.next(false);
+        });
+
+        this.hubConnection!.onreconnected(() => {
+          this.connectionEstablished.next(true);
+          this.setupEventHandlers();
+        });
+
+        this.hubConnection!.onclose(() => {
+          this.connectionEstablished.next(false);
+        });
+
+        this.hubConnection!.start()
+          .then(() => {
+            this.connectionEstablished.next(true);
+            this.setupEventHandlers();
+            resolve();
+          })
+          .catch((error) => {
+            // Silent error handling for production
+            this.connectionEstablished.next(false);
+            resolve(); // Always resolve to prevent hanging
+          });
+      }, 100); // Small delay to ensure clean connection
     });
-
-    this.hubConnection.onreconnected(() => {
-      this.connectionEstablished.next(true);
-      this.setupEventHandlers();
-    });
-
-    this.hubConnection.onclose(() => {
-      this.connectionEstablished.next(false);
-    });
-
-    return this.hubConnection
-      .start()
-      .then(() => {
-        this.connectionEstablished.next(true);
-        this.setupEventHandlers();
-      })
-      .catch((error) => {
-        console.warn(
-          'SignalR connection failed, but continuing without real-time features:',
-          error.message
-        );
-        this.connectionEstablished.next(false);
-        // Don't throw the error, just log it
-        return Promise.resolve();
-      });
   }
 
   stopConnection(): void {
