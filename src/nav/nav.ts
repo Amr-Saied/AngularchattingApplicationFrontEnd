@@ -46,7 +46,6 @@ export class Nav implements OnInit, AfterViewInit {
   ngOnInit() {
     // Subscribe to state changes
     this.stateService.currentUser$.subscribe((user) => {
-      console.log('📱 Nav: Received currentUser update', user);
       this.currentUser = user;
     });
 
@@ -56,6 +55,8 @@ export class Nav implements OnInit, AfterViewInit {
         this.loadCurrentUser();
       } else {
         this.currentUser = null;
+        // Clear any cached data when logged out
+        this.stateService.clearState();
       }
     });
   }
@@ -130,12 +131,6 @@ export class Nav implements OnInit, AfterViewInit {
     // Call backend logout endpoint and handle cleanup
     this.accountService.logout().subscribe({
       next: (response) => {
-        console.log('Logout response:', response);
-
-        // Clear local state
-        this.loggedIn = false;
-        this.currentUser = null;
-
         // Clear any cached data
         this.stateService.clearState();
 
@@ -153,8 +148,6 @@ export class Nav implements OnInit, AfterViewInit {
         console.error('Logout error:', error);
 
         // Even if backend fails, clear local state
-        this.loggedIn = false;
-        this.currentUser = null;
         this.stateService.clearState();
         this.router.navigate(['/home']);
 

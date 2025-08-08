@@ -230,8 +230,10 @@ export class AccountService implements OnDestroy {
         return of({ message: 'Logged out locally' });
       }),
       finalize(() => {
-        // Always clear local storage and update state
-        this.clearLoggedUserFromStorage();
+        // Only clear local storage if it hasn't been cleared already
+        if (this.isLoggedIn()) {
+          this.clearLoggedUserFromStorage();
+        }
       })
     );
   }
